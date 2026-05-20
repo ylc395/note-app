@@ -65,7 +65,7 @@ export default class PdfEditor extends BaseEditor {
   public readonly svgEditor = new SvgAnnotationEditor(this.annotation);
 
   @observable.ref
-  public accessor visiblePages: Readonly<number[]> = [];
+  private accessor visiblePages: Readonly<number[]> = [];
 
   @action
   public updateVisiblePages(pages: Readonly<number[]>) {

@@ -1,13 +1,27 @@
-// import { createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js';
-// import { autoUpdate, computePosition, offset } from '@floating-ui/dom';
-// import { Key } from '@solid-primitives/keyed';
-// import { makeResizeObserver } from '@solid-primitives/resize-observer';
+import { For, Match, Switch } from 'solid-js';
 
-// import type PdfViewer from '../PDFViewer';
-// import TextAnnotation from './TextAnnotation';
-// import SvgAnnotation from './SvgAnnotation';
-// import SvgEditor from './SvgEditor';
-// import { Mode } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
+import { useContext } from '../../context';
+import TextAnnotation from './TextAnnotation';
+
+export default function AnnotationLayer(props: { page: number }) {
+  const {
+    viewer: { editor },
+  } = useContext()!;
+
+  return (
+    <div data-annotation-page={props.page}>
+      <For each={editor.annotation.pages[props.page]}>
+        {(annotation) => (
+          <Switch>
+            <Match when={annotation.selector.type === 'PDFTextPositionSelector'}>
+              <TextAnnotation annotation={annotation} page={props.page} />
+            </Match>
+          </Switch>
+        )}
+      </For>
+    </div>
+  );
+}
 
 // export default function PageAnnotationLayer(props: { page: number; pdfViewer: PdfViewer }) {
 //   let divRef: HTMLDivElement | undefined;

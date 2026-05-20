@@ -1,17 +1,18 @@
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import assert from 'assert';
+import { range } from 'lodash-es';
 
 export * from '#domain/shared/model/annotation';
 
-export function getPage(annotation: AnnotationVO, type: 'start' | 'end' = 'start') {
+export function getPageRange(annotation: AnnotationVO) {
   const { selector } = annotation;
 
   if (selector.type === 'PDFSvgSelector') {
-    return selector.page;
+    return [selector.page];
   }
 
   if (selector.type === 'PDFTextPositionSelector') {
-    return type === 'start' ? selector.position.startPage : selector.position.endPage;
+    return range(selector.position.startPage, selector.position.endPage + 1);
   }
 
   assert.fail('invalid annotation');

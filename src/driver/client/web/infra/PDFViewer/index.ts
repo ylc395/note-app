@@ -168,7 +168,7 @@ export default class PDFViewer {
 
     pdfViewer.pagesPromise.then(this.updateVisiblePages);
 
-    pdfViewer.eventBus.on('updateviewarea', debounce(this.updateVisiblePages, 300), {
+    pdfViewer.eventBus.on('updateviewarea', debounce(this.updateVisiblePages, 200), {
       signal: this.abortController.signal,
     });
 

@@ -1,4 +1,6 @@
-import { createEffect, onCleanup, Show } from 'solid-js';
+import { createEffect, createMemo, onCleanup, Show } from 'solid-js';
+import { identity, intersection } from 'lodash-es';
+import { Key } from '@solid-primitives/keyed';
 import { cx } from 'class-variance-authority';
 import { LoaderCircleIcon } from 'lucide-solid';
 
@@ -7,14 +9,18 @@ import SvgEditorBar from './SvgEditorBar';
 import SelectionTooltip from './SelectionTooltip';
 import { useContext } from '../context';
 import useTextRender from './useTextRender';
+import AnnotationLayer from './AnnotationLayer';
 import './style.css';
 
 export default function PdfEditorView(props: Record<string, unknown>) {
   let containerRef: HTMLDivElement | undefined;
   let viewRef: HTMLDivElement | undefined;
   const { viewer: pdfViewer } = useContext()!;
+  const textRenderedPages = useTextRender();
 
-  useTextRender();
+  const annotationPages = createMemo(() => {
+    return intersection(Object.keys(pdfViewer.editor.annotation.pages).map(Number), textRenderedPages());
+  });
 
   createEffect(() => {
     pdfViewer.init({
@@ -54,6 +60,14 @@ export default function PdfEditorView(props: Record<string, unknown>) {
         </div>
         <Show when={!pdfViewer.editor.svgEditor.isEnabled}>
           <SelectionTooltip />
+        </Show>
+        {/* 提示：不要试图用 Portal 把东西挂载到 pdf.js 渲染出的页面里 */}
+        <Show when={annotationPages().length > 0}>
+          <div data-app-annotations>
+            <Key by={identity} each={annotationPages()}>
+              {(page) => <AnnotationLayer page={page()} />}
+            </Key>
+          </div>
         </Show>
       </div>
     </div>

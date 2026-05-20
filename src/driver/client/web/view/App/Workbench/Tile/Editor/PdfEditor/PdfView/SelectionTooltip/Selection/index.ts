@@ -50,7 +50,7 @@ export default class Selection {
       this.current.floating = undefined;
     }
 
-    this.commentEditor.clearMarkers();
+    this.commentEditor.clearMarks();
     this.show.cancel();
     document.removeEventListener('selectionchange', this.handleSelection);
   }

@@ -86,11 +86,6 @@ export default class CommentEditor {
     this.content = value;
   }
 
-  public clearMarkers() {
-    this._markers = undefined;
-    this.position = undefined;
-  }
-
   private positionToRange(position: Position) {
     const range = new Range();
     const setBoundary = (page: number, totalOffset: number, isStart?: boolean) => {

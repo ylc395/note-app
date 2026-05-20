@@ -2,8 +2,9 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import type Mark from 'mark.js';
-import { action, observable, toJS } from 'mobx';
+import { action, computed, observable, toJS } from 'mobx';
 import z from 'zod';
+import { pickBy, uniqBy } from 'lodash-es';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -12,7 +13,7 @@ import {
   type AnnotationVO,
   type PDFSvgSelector,
   type PDFTextPositionSelector,
-  getPage,
+  getPageRange,
 } from '#domain/client/app/model/annotation';
 
 dayjs.extend(customParseFormat);
@@ -62,20 +63,52 @@ export default class AnnotationManager {
   }
 
   public getAnnotationCount(startPage: number, endPage: number) {
-    if (!this.items.result.data) {
-      return 0;
+    const annotations = pickBy(this.pages, (annotations, page) => {
+      return Number(page) >= startPage && Number(page) <= endPage;
+    });
+
+    return uniqBy(Object.values(annotations).flat(), ({ id }) => id).length;
+  }
+
+  @computed
+  public get pages() {
+    const result: Record<number, AnnotationVO[]> = {};
+
+    for (const annotation of this.items.result.data || []) {
+      const pages = getPageRange(annotation);
+
+      for (const page of pages) {
+        if (!result[page]) {
+          result[page] = [];
+        }
+        result[page]!.push(annotation);
+      }
     }
 
-    return this.items.result.data.filter(({ selector: s }) => {
-      return (
-        (s.type === 'PDFSvgSelector' && s.page >= startPage && s.page < endPage) ||
-        (s.type === 'PDFTextPositionSelector' && (s.position.startPage >= startPage || s.position.endPage <= endPage))
-      );
-    }).length;
+    return result;
+  }
+
+  @observable
+  public accessor uiState: z.infer<typeof AnnotationManager.schema> = {};
+
+  public toJSON() {
+    return toJS(this.uiState);
+  }
+
+  @action
+  public init(value?: AnnotationManager['uiState']) {
+    if (value) {
+      this.uiState = value;
+    }
+  }
+
+  @action
+  public destroy() {
+    this.destroyController.abort();
   }
 
   private static sort(annotation1: AnnotationVO, annotation2: AnnotationVO) {
-    return getPage(annotation1) - getPage(annotation2);
+    return getPageRange(annotation1)[0]! - getPageRange(annotation2)[0]!;
   }
 
   public static positionToRange(position: Position, currentPage: number) {
@@ -101,25 +134,6 @@ export default class AnnotationManager {
     }
 
     return range;
-  }
-
-  @observable
-  public accessor uiState: z.infer<typeof AnnotationManager.schema> = {};
-
-  public toJSON() {
-    return toJS(this.uiState);
-  }
-
-  @action
-  public init(value?: AnnotationManager['uiState']) {
-    if (value) {
-      this.uiState = value;
-    }
-  }
-
-  @action
-  public destroy() {
-    this.destroyController.abort();
   }
 
   public static readonly schema = z.object({

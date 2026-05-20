@@ -1,4 +1,4 @@
-import { createEffect } from 'solid-js';
+import { createEffect, createSignal } from 'solid-js';
 import { sum } from 'lodash-es';
 
 import { IS_DEV } from '#domain/shared/infra/env';
@@ -117,8 +117,10 @@ function createElement(
   return el;
 }
 
+// 文字层就不做成组件了，一次性渲染，没有必要
 export default function useTextRender() {
   const textLayers = new WeakSet<HTMLElement>();
+  const [textRenderedPages, setTextRenderedPages] = createSignal<number[]>([]);
 
   // todo: 当前的算法没处理好文字 + 漂浮图片的排版。例子：代码整洁之道 P71
   createEffect(() => {
@@ -193,5 +195,16 @@ export default function useTextRender() {
 
       textLayers.add(textLayer);
     }
+
+    setTextRenderedPages(
+      pages
+        .filter(({ page }) => {
+          const textLayer = viewer.getPageInfo(page).textLayer;
+          return textLayer && textLayers.has(textLayer);
+        })
+        .map(({ page }) => page),
+    );
   });
+
+  return textRenderedPages;
 }

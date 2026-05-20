@@ -2,9 +2,10 @@ import dayjs from 'dayjs';
 import { createMemo, Show } from 'solid-js';
 import assert from 'assert';
 
-import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation';
+import { getPageRange, type AnnotationVO } from '#domain/client/app/model/annotation';
 import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import { useContext } from '../../composables';
+import { first, last } from 'lodash-es';
 
 export default function TextItem(props: { value: AnnotationVO }) {
   const ctx = useContext()!;
@@ -13,8 +14,9 @@ export default function TextItem(props: { value: AnnotationVO }) {
     return ctx.editor;
   });
 
-  const startPage = createMemo(() => getPage(props.value));
-  const endPage = createMemo(() => getPage(props.value, 'end'));
+  const pageRange = createMemo(() => getPageRange(props.value));
+  const startPage = createMemo(() => first(pageRange()));
+  const endPage = createMemo(() => last(pageRange()));
   const quote = createMemo(() => {
     assert(props.value.selector.type === 'PDFTextPositionSelector');
     return props.value.selector.fullText;

@@ -47,6 +47,7 @@ export default class PageTextManager {
         abortSignal: this.destroyController.signal,
         queryKey: ['pdf-texts', { id: this.options.noteId, page }],
         retryDelay: 5000,
+        staleTime: Infinity,
         retry: this.options.shouldFetch.bind(null, page),
         options: () => ({ enabled: this.options.shouldFetch(page) }),
       },
