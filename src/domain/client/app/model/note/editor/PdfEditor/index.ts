@@ -14,6 +14,7 @@ import AnnotationManager from './AnnotationManager';
 import OutlineList from './OutlineList';
 import SvgAnnotationEditor from './SvgAnnotationEditor';
 import BodyEditor from './BodyEditor';
+import type { SelectionState } from './selectionState';
 
 export type { OutlineItem } from './OutlineList';
 
@@ -61,6 +62,9 @@ export default class PdfEditor extends BaseEditor {
   public readonly body = new BodyEditor();
 
   public readonly textFinder = new TextFinder(this.entityId, this.texts);
+
+  @observable.ref
+  public accessor selection: SelectionState | undefined;
 
   public readonly svgEditor = new SvgAnnotationEditor(this.annotation);
 

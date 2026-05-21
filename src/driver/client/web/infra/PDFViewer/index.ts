@@ -10,7 +10,7 @@ import {
   type PDFPageView,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import assert from 'assert';
-import { debounce, range } from 'lodash-es';
+import { range } from 'lodash-es';
 import { action, computed, observable, runInAction } from 'mobx';
 
 import shell from '../shell';
@@ -90,11 +90,6 @@ export default class PDFViewer {
   @observable.ref
   public accessor visiblePages: Readonly<number[]> = [];
 
-  @action.bound
-  private updateVisiblePages() {
-    this.visiblePages = Array.from((this.core?._getVisiblePages() as { ids: Set<number> }).ids);
-  }
-
   @observable
   public accessor isReady = false;
 
@@ -166,11 +161,27 @@ export default class PDFViewer {
 
     options.view.addEventListener('click', this.hijackClick, { signal: this.abortController.signal });
 
-    pdfViewer.pagesPromise.then(this.updateVisiblePages);
+    let visiblePages: number[] = [];
 
-    pdfViewer.eventBus.on('updateviewarea', debounce(this.updateVisiblePages, 200), {
+    const updateVisiblePages = () => {
+      visiblePages = Array.from((this.core?._getVisiblePages() as { ids: Set<number> }).ids);
+    };
+
+    pdfViewer.pagesPromise.then(updateVisiblePages);
+
+    pdfViewer.eventBus.on('updateviewarea', updateVisiblePages, {
       signal: this.abortController.signal,
     });
+
+    pdfViewer.eventBus.on(
+      'textlayerrendered',
+      action(() => {
+        this.visiblePages = visiblePages.filter((page) => this.getPageInfo(page).textLayer);
+      }),
+      {
+        signal: this.abortController.signal,
+      },
+    );
 
     pdfViewer.onePageRendered.then(() => {
       if (options.onProgressUpdated) {

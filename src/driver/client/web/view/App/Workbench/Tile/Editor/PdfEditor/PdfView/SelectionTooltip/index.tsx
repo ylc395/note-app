@@ -10,7 +10,7 @@ import { useContext } from '../../context';
 export default function SelectionTooltip() {
   const { viewer } = useContext()!;
   let rootEl: HTMLDivElement | undefined;
-  const selection = new Selection(viewer); // selection 的生命周期比组件长，和 editor 保持一致
+  const selection = new Selection(viewer);
 
   onMount(() => {
     selection.init(rootEl!);

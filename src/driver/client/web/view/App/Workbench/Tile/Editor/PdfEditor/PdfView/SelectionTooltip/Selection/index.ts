@@ -1,18 +1,13 @@
-import { action, computed, observable } from 'mobx';
+import { action, computed, reaction } from 'mobx';
 import assert from 'assert';
-import { debounce, omit } from 'lodash-es';
+import { debounce, intersection, omit, range } from 'lodash-es';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
 
-import type { Position } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
 import { IS_DEV } from '#domain/shared/infra/env';
+import type { Position } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
+import type { SelectionState } from '#domain/client/app/model/note/editor/PdfEditor/selectionState';
 import CommentEditor from './CommentEditor';
 import type PDFEditorViewer from '../../../PDFEditorViewer';
-
-interface SelectionState {
-  text: string;
-  position: Required<Position>;
-  disposeFloating?: () => void;
-}
 
 export default class Selection {
   public readonly commentEditor: CommentEditor;
@@ -26,22 +21,70 @@ export default class Selection {
 
   private rootEl?: HTMLElement;
 
-  @observable.ref
-  private accessor current: SelectionState | undefined;
+  private readonly abortController = new AbortController();
+
+  @computed
+  private get current() {
+    return this.pdfViewer.editor.selection;
+  }
+
+  @action
+  private set current(value: SelectionState | undefined) {
+    this.pdfViewer.editor.selection = value;
+  }
 
   @computed
   public get isVisible() {
     return Boolean(this.current);
   }
 
+  @action
   public init(rootEl: HTMLElement) {
+    const { current: initialCurrent } = this;
+
+    this.current = undefined;
     this.rootEl = rootEl;
-    document.addEventListener('selectionchange', this.handleSelection);
+    let initialized = !initialCurrent;
+
+    if (initialized) {
+      document.addEventListener('selectionchange', this.handleSelection, { signal: this.abortController.signal });
+    }
+
+    reaction(
+      () => this.pdfViewer.viewer.visiblePages,
+      (pages) => {
+        const current = initialized ? this.current : initialCurrent;
+
+        if (!current || current.floating?.isActive) {
+          return;
+        }
+
+        const pageRange = range(current.position.startPage, current.position.endPage + 1);
+        const renderedPages = pages.filter((page) => this.pdfViewer.viewer.getPageInfo(page).textLayer);
+
+        if (intersection(pageRange, renderedPages).length === pageRange.length) {
+          if (!initialized) {
+            document.addEventListener('selectionchange', this.handleSelection, { signal: this.abortController.signal });
+          }
+
+          initialized = true;
+
+          const selection = window.getSelection();
+
+          selection?.removeAllRanges();
+          selection?.addRange(this.positionToRange(current.position));
+        }
+      },
+      {
+        signal: this.abortController.signal,
+        fireImmediately: true,
+      },
+    );
   }
 
   public destroy() {
-    this.hide();
-    document.removeEventListener('selectionchange', this.handleSelection);
+    this.hide(false);
+    this.abortController.abort();
   }
 
   private readonly handleSelection = () => {
@@ -66,7 +109,7 @@ export default class Selection {
     ) {
       this.hide();
     } else {
-      this.show();
+      this.showByDomSelection();
     }
   };
 
@@ -102,23 +145,26 @@ export default class Selection {
   }
 
   @action
-  private hide() {
+  private hide(clearCurrent = true) {
     if (this.current) {
-      this.current.disposeFloating?.();
-      this.current = undefined;
+      this.current.floating?.dispose();
+
+      if (clearCurrent) {
+        this.current = undefined;
+      } else {
+        this.current.floating = undefined;
+      }
     }
 
-    this.show.cancel();
+    this.showByDomSelection.cancel();
 
     if (this.commentEditor.isOpen) {
       this.commentEditor.cancel();
     }
   }
 
-  private readonly show = debounce(
+  private readonly showByDomSelection = debounce(
     action(() => {
-      this.hide();
-
       const s = window.getSelection();
 
       if (!s || !s.focusNode || !s.anchorNode) {
@@ -145,9 +191,11 @@ export default class Selection {
         }
       }
 
+      this.current?.floating?.dispose();
+
       this.current = {
         text: range.toString(),
-        disposeFloating: this.generateFloating(range, toStart),
+        floating: this.generateFloating(range, toStart),
         position: {
           ...this.rangeToPosition(range),
           toStart,
@@ -177,6 +225,11 @@ export default class Selection {
     assert(rootEl, 'no rootEl');
 
     const dispose = autoUpdate(referenceElement, rootEl, () => {
+      if (!referenceElement.isConnected) {
+        dispose();
+        return;
+      }
+
       computePosition(referenceElement, rootEl, {
         placement: toStart ? 'top' : 'bottom',
         middleware: [flip(), offset(5)],
@@ -185,10 +238,44 @@ export default class Selection {
       });
     });
 
-    return () => {
-      dispose();
-      referenceElement.remove();
+    return {
+      get isActive() {
+        return referenceElement.isConnected;
+      },
+
+      dispose: () => {
+        dispose();
+        referenceElement.remove();
+      },
     };
+  }
+
+  private positionToRange(position: Position) {
+    const range = new Range();
+
+    const setBoundary = (page: number, totalOffset: number, isStart?: boolean) => {
+      const { textLayer } = this.pdfViewer.viewer.getPageInfo(page);
+      assert(textLayer);
+
+      const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);
+      let offset = 0;
+      let currentNode = treeWalker.nextNode() as Text | null;
+
+      while (currentNode) {
+        if (currentNode.length + offset >= totalOffset) {
+          range[isStart ? 'setStart' : 'setEnd'](currentNode, totalOffset - offset);
+          break;
+        } else {
+          offset += currentNode.length;
+          currentNode = treeWalker.nextNode() as Text | null;
+        }
+      }
+    };
+
+    setBoundary(position.startPage, position.startOffset, true);
+    setBoundary(position.endPage, position.endOffset);
+
+    return range;
   }
 
   private rangeToPosition(range: Range) {
