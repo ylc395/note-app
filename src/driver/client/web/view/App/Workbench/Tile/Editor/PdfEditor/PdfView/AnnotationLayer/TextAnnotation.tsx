@@ -7,6 +7,7 @@ import Mark from 'mark.js';
 import { autoUpdate, computePosition, offset } from '@floating-ui/dom';
 import { first, last } from 'lodash-es';
 import assert from 'assert';
+import { createTrigger } from '@solid-primitives/trigger';
 
 import shell from '#web/infra/shell';
 import type { AnnotationVO } from '#domain/shared/model/annotation';
@@ -24,8 +25,7 @@ export default function TextAnnotation(props: { annotation: AnnotationVO; page: 
 
   const [buttonRef, setButtonRef] = createSignal<HTMLElement>();
   const [marksRef, setMarksRef] = createSignal<Element[]>();
-  const [forceRenderFlag, setForceRenderFlag] = createSignal<number>(0);
-  const forceRender = () => setForceRenderFlag(forceRenderFlag() + 1);
+  const [renderFlag, forceRender] = createTrigger();
 
   const shouldShowComment = createMemo(() => {
     if (!props.annotation.body) {
@@ -58,7 +58,7 @@ export default function TextAnnotation(props: { annotation: AnnotationVO; page: 
   });
 
   createEffect(function render() {
-    forceRenderFlag();
+    renderFlag();
     const selector = props.annotation.selector;
     const pageEl = viewer.getPageInfo(props.page).textLayer;
 
