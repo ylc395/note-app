@@ -79,27 +79,30 @@ export default function AnnotationList(props: { id: string }) {
       size={floatingSize()}
       onResize={action(setFloatingSize)}
       onResizeEnd={action(handleResizeEnd)}
-    >
+      asChild={(injected) => (
         <div
           class={cx(
-            'w-64 p-2 border-border-primary flex flex-col overflow-auto bg-surface-raised',
+            'p-2 border-border-primary flex flex-col bg-surface-raised overflow-auto relative h-full',
             uiState.isFloating ? 'border' : 'border-l',
           )}
-          {...(editor.annotation.uiState.isFloating ? null : splitter().getPanelProps({ id: props.id }))}
+          {...injected()}
+          {...(uiState.isFloating ? null : splitter().getPanelProps({ id: props.id }))}
         >
-          <FloatingPanel.Handler>
-            <div class="flex justify-between mb-2">
-              <Show when={items()}>{(items) => <div class="text-sm">共计 {items().length} 个</div>}</Show>
-              <div class="flex">
-                <Settings />
-                <Show when={uiState.isFloating}>
-                  <Button size="small" onClick={action(cancelFloating)}>
-                    <PinOffIcon class="mr-1" />
-                  </Button>
-                </Show>
+          <FloatingPanel.Handler
+            asChild={(props) => (
+              <div {...props()} class="flex justify-between mb-2 sticky top-0">
+                <Show when={items()}>{(items) => <div class="text-sm">共计 {items().length} 个</div>}</Show>
+                <div class="flex">
+                  <Settings />
+                  <Show when={uiState.isFloating}>
+                    <Button size="small" onClick={action(cancelFloating)}>
+                      <PinOffIcon class="mr-1" />
+                    </Button>
+                  </Show>
+                </div>
               </div>
-            </div>
-          </FloatingPanel.Handler>
+            )}
+          />
           <Show
             when={items()}
             fallback={
@@ -121,6 +124,7 @@ export default function AnnotationList(props: { id: string }) {
             )}
           </Show>
         </div>
-    </FloatingPanel.Main>
+      )}
+    />
   );
 }

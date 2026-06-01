@@ -61,42 +61,46 @@ export default function BodyEditor(props: { id: string }) {
       size={floatingSize()}
       onResize={action(setFloatingSize)}
       onResizeEnd={action(handleResizeEnd)}
-    >
-      <div
-        class={cx(
-          'w-64 p-2 border-border-primary flex flex-col overflow-auto bg-surface-raised h-full',
-          uiState.isFloating ? 'border' : 'border-r',
-        )}
-        {...(!editor.body.uiState.isFloating ? splitter().getPanelProps({ id: props.id }) : null)}
-      >
-        <FloatingPanel.Handler>
-          <div class="flex justify-between items-center">
-            <h4>笔记</h4>
-            <div>
-              <Show when={uiState.isFloating}>
-                <Button size="small" onClick={action(cancelFloating)}>
-                  <PinOffIcon class="mr-1" />
-                  取消悬浮
-                </Button>
-              </Show>
-            </div>
-          </div>
-        </FloatingPanel.Handler>
-        <Show when={editor.source.value.data}>
-          {(note) => (
-            <MarkdownEditor
-              ref={setMdEditor}
-              className="border-r-border-primary border-r h-full grow p-2"
-              onUpdate={onUpdate}
-              defaultValue={note().body}
-              initialScroll={uiState.scroll}
-              initialCursorPos={uiState.cursorPos}
-              onScrollEnd={action(handleScrollEnd)}
-              onSelectionUpdate={action(handleSelectionUpdate)}
-            />
+      asChild={(injected) => (
+        <div
+          class={cx(
+            'p-2 border-border-primary flex flex-col overflow-auto bg-surface-raised h-full',
+            uiState.isFloating ? 'border' : 'border-r',
           )}
-        </Show>
-      </div>
-    </FloatingPanel.Main>
+          {...injected()}
+          {...(!editor.body.uiState.isFloating ? splitter().getPanelProps({ id: props.id }) : null)}
+        >
+          <FloatingPanel.Handler
+            asChild={(props) => (
+              <div {...props()} class="flex justify-between items-center">
+                <h4>笔记</h4>
+                <div>
+                  <Show when={uiState.isFloating}>
+                    <Button size="small" onClick={action(cancelFloating)}>
+                      <PinOffIcon class="mr-1" />
+                      取消悬浮
+                    </Button>
+                  </Show>
+                </div>
+              </div>
+            )}
+          />
+          <Show when={editor.source.value.data}>
+            {(note) => (
+              <MarkdownEditor
+                ref={setMdEditor}
+                className="border-r-border-primary border-r h-full grow p-2"
+                onUpdate={onUpdate}
+                defaultValue={note().body}
+                initialScroll={uiState.scroll}
+                initialCursorPos={uiState.cursorPos}
+                onScrollEnd={action(handleScrollEnd)}
+                onSelectionUpdate={action(handleSelectionUpdate)}
+              />
+            )}
+          </Show>
+        </div>
+      )}
+    />
   );
 }

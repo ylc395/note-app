@@ -1,6 +1,5 @@
 import {
   createContext,
-  createEffect,
   createMemo,
   createSignal,
   onCleanup,
@@ -8,9 +7,9 @@ import {
   useContext,
   type Accessor,
   type JSX,
+  type ParentProps,
   type Setter,
 } from 'solid-js';
-import { Ref } from '@solid-primitives/refs';
 import { FloatingPanel } from '@ark-ui/solid/floating-panel';
 import assert from 'assert';
 
@@ -29,82 +28,69 @@ const FloatingPanelContext = createContext<{
  * 并在同一个拖动周期（isTempDragging）内继续处理 onMove 和 onMoveEnd，
  * 这样切换到浮动模式后用户无需松开鼠标即可继续拖动。
  */
-function DragDetector(props: { children: JSX.Element }) {
-  const [handlerRef, setHandlerRef] = createSignal<HTMLElement>();
+function DragDetector(props: { asChild: (props: () => JSX.HTMLAttributes<unknown>) => JSX.Element }) {
   const ctx = useContext(FloatingPanelContext);
-  assert(ctx);
+  const abortController = new AbortController();
 
-  createEffect(() => {
-    const handler = handlerRef();
+  function onPointerDown(e: PointerEvent) {
+    assert(ctx);
 
-    if (!handler) {
-      return;
-    }
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const panel = ctx.panelRef();
+    assert(panel);
 
-    handler.style.cursor = 'move';
+    const panelStartPos = {
+      x: panel.offsetLeft,
+      y: panel.offsetTop,
+    };
 
-    const abortController = new AbortController();
+    const moveSignal = new AbortController();
+    let panelCurrentPos: { x: number; y: number } | undefined;
 
-    handler.addEventListener(
-      'pointerdown',
-      (e) => {
-        const startX = e.clientX;
-        const startY = e.clientY;
-        const panel = ctx.panelRef();
-        assert(panel);
+    document.addEventListener(
+      'pointermove',
+      (moveEvent) => {
+        const deltaX = moveEvent.clientX - startX;
+        const deltaY = moveEvent.clientY - startY;
+        panelCurrentPos = { x: panelStartPos.x + deltaX, y: panelStartPos.y + deltaY };
 
-        const panelStartPos = {
-          x: panel.offsetLeft,
-          y: panel.offsetTop,
-        };
-
-        const moveSignal = new AbortController();
-        let panelCurrentPos: { x: number; y: number } | undefined;
-
-        document.addEventListener(
-          'pointermove',
-          (moveEvent) => {
-            const deltaX = moveEvent.clientX - startX;
-            const deltaY = moveEvent.clientY - startY;
-            panelCurrentPos = { x: panelStartPos.x + deltaX, y: panelStartPos.y + deltaY };
-
-            if (ctx.isTempDragging()) {
-              ctx.onMove(panelCurrentPos);
-            } else if (Math.abs(deltaX) >= 3 || Math.abs(deltaY) >= 3) {
-              ctx.setIsTempDragging(true);
-              ctx.onMoveStart(panelCurrentPos);
-            }
-          },
-          { signal: AbortSignal.any([abortController.signal, moveSignal.signal]) },
-        );
-
-        document.addEventListener(
-          'pointerup',
-          () => {
-            if (ctx.isTempDragging() && panelCurrentPos) {
-              ctx.onMoveEnd(panelCurrentPos);
-              ctx.setIsTempDragging(false);
-            }
-
-            moveSignal.abort();
-          },
-
-          { signal: AbortSignal.any([abortController.signal, moveSignal.signal]) },
-        );
+        if (ctx.isTempDragging()) {
+          ctx.onMove(panelCurrentPos);
+        } else if (Math.abs(deltaX) >= 3 || Math.abs(deltaY) >= 3) {
+          ctx.setIsTempDragging(true);
+          ctx.onMoveStart(panelCurrentPos);
+        }
       },
-      { signal: abortController.signal },
+      { signal: AbortSignal.any([abortController.signal, moveSignal.signal]) },
     );
 
-    onCleanup(() => {
-      abortController.abort();
-    });
+    document.addEventListener(
+      'pointerup',
+      () => {
+        if (ctx.isTempDragging() && panelCurrentPos) {
+          ctx.onMoveEnd(panelCurrentPos);
+          ctx.setIsTempDragging(false);
+        }
+
+        moveSignal.abort();
+      },
+
+      { signal: AbortSignal.any([abortController.signal, moveSignal.signal]) },
+    );
+  }
+
+  onCleanup(() => {
+    abortController.abort();
   });
 
-  return <Ref ref={setHandlerRef}>{props.children}</Ref>;
+  return props.asChild(() => ({
+    onPointerDown,
+  }));
 }
 
 function Main(props: {
-  children: JSX.Element;
+  asChild: (injected: () => { ref: (el: HTMLElement) => void; style: JSX.CSSProperties }) => JSX.Element;
   isEnabled: boolean;
   pos: { x?: number; y?: number; left?: number; top?: number; right?: number; bottom?: number };
   size?: { width: number; height: number };
@@ -132,21 +118,29 @@ function Main(props: {
     setIsTempDragging,
   };
 
-  createEffect(() => {
-    const panel = panelRef();
-    if (isTempDragging() && panel) {
-      Object.assign(panel.style, {
-        position: 'absolute',
-        left: `${position().x}px`,
-        top: `${position().y}px`,
-        zIndex: 10,
-      });
-    }
+  const injectedStyle = createMemo<JSX.CSSProperties>(() => {
+    if (!isTempDragging()) return {};
+    const pos = position();
+    return {
+      position: 'absolute',
+      left: `${pos.x}px`,
+      top: `${pos.y}px`,
+      'z-index': 10,
+      ...(props.size && {
+        width: `${props.size.width}px`,
+        height: `${props.size.height}px`,
+      }),
+    };
+  });
+
+  const injectedProps = () => ({
+    ref: setPanelRef,
+    style: injectedStyle(),
   });
 
   return (
     <FloatingPanelContext.Provider value={contextValue}>
-      <Show when={props.isEnabled && !isTempDragging()} fallback={<Ref ref={setPanelRef}>{props.children}</Ref>}>
+      <Show when={props.isEnabled && !isTempDragging()} fallback={props.asChild(injectedProps)}>
         <FloatingPanel.Root
           open={true}
           position={position()}
@@ -160,8 +154,8 @@ function Main(props: {
           resizable
         >
           <FloatingPanel.Positioner class="z-10">
-            <FloatingPanel.Content ref={setPanelRef}>
-              {props.children}
+            <FloatingPanel.Content class="overflow-auto" ref={setPanelRef}>
+              {props.asChild(injectedProps)}
               <FloatingPanel.ResizeTrigger axis="n" class="absolute top-0 left-2 right-2 h-1 cursor-n-resize" />
               <FloatingPanel.ResizeTrigger axis="e" class="absolute top-2 right-0 bottom-2 w-1 cursor-e-resize" />
               <FloatingPanel.ResizeTrigger axis="w" class="absolute top-2 left-0 bottom-2 w-1 cursor-w-resize" />
@@ -178,13 +172,14 @@ function Main(props: {
   );
 }
 
-function Handler(props: { children: JSX.Element }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function Handler(props: { asChild: (props: () => ParentProps<any>) => JSX.Element }) {
   const ctx = useContext(FloatingPanelContext);
   assert(ctx);
 
   return (
-    <Show when={ctx.isEnabled() && !ctx.isTempDragging()} fallback={<DragDetector>{props.children}</DragDetector>}>
-      <FloatingPanel.DragTrigger>{props.children}</FloatingPanel.DragTrigger>
+    <Show when={ctx.isEnabled() && !ctx.isTempDragging()} fallback={<DragDetector asChild={props.asChild} />}>
+      <FloatingPanel.DragTrigger asChild={props.asChild} />
     </Show>
   );
 }

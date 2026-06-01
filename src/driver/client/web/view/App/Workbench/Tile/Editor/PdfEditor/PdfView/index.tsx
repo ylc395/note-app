@@ -34,7 +34,7 @@ export default function PdfEditorView(props: Record<string, unknown>) {
   });
 
   return (
-    <div class="relative grow flex min-h-0 overflow-hidden flex-col" {...props}>
+    <div class="relative grow flex min-h-0 flex-col" {...props}>
       <Show when={pdfViewer.editor.textFinder.isEnabled}>
         <SearchBar />
       </Show>

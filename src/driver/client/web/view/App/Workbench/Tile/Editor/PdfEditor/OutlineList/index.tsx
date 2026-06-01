@@ -3,14 +3,14 @@ import { LoaderCircleIcon, EyeIcon, PinOffIcon } from 'lucide-solid';
 import assert from 'assert';
 import { action } from 'mobx';
 import { useSplitterContext } from '@ark-ui/solid';
+import { partialRight } from 'lodash-es';
+import { cx } from 'class-variance-authority';
 
-import FloatingPanel from '#web/view/components/FloatingPanel';
 import Item from './Item';
 import OutlineViewModel from './Outline';
 import { useContext } from '../context';
 import Button from '#web/view/components/Button';
-import { partialRight } from 'lodash-es';
-import { cx } from 'class-variance-authority';
+import FloatingPanel from '#web/view/components/FloatingPanel';
 
 export default function Outline(props: { id: string }) {
   const { viewer } = useContext()!;
@@ -85,59 +85,60 @@ export default function Outline(props: { id: string }) {
     <FloatingPanel.Main
       isEnabled={Boolean(uiState.isFloating)}
       pos={floatingPos()}
-      onMove={setFloatingPos}
+      onMove={action(handleMove)}
       onMoveStart={action(partialRight(handleMove, true))}
       onMoveEnd={action(handleMoveEnd)}
       size={floatingSize()}
       onResize={action(setFloatingSize)}
       onResizeEnd={action(handleResizeEnd)}
-    >
-      <div
-        class={cx(
-          'overflow-auto border-border-primary flex flex-col bg-surface-raised',
-          uiState.isFloating ? 'border' : 'border-r',
-        )}
-        classList={{ 'overflow-auto h-full': !uiState.isFloating }}
-        {...(uiState.isFloating
-          ? { style: { width: `${floatingSize().width}px`, height: `${floatingSize().height}px` } }
-          : splitter().getPanelProps({ id: props.id }))}
-      >
-        <FloatingPanel.Handler>
-          <div class="top-0 bg-bg-secondary flex items-center">
-            <h4>大纲</h4>
-            <div class="flex items-center justify-end grow">
-              <Button size="small" onClick={scrollToFocused}>
-                <EyeIcon class="mr-1" />
-                当前浏览
-              </Button>
-              <Show when={uiState.isFloating}>
-                <Button size="small" onClick={action(cancelFloating)}>
-                  <PinOffIcon class="mr-1" />
-                  取消悬浮
-                </Button>
-              </Show>
-            </div>
-          </div>
-        </FloatingPanel.Handler>
-        <Show
-          when={!outline.model.items || outline.model.items.length > 0}
-          fallback={<div class="flex h-full justify-center items-center">无大纲</div>}
+      asChild={(injected) => (
+        <div
+          class={cx(
+            'overflow-auto border-border-primary flex flex-col bg-surface-raised relative h-full',
+            uiState.isFloating ? 'border' : 'border-r',
+          )}
+          {...injected()}
+          {...(uiState.isFloating ? null : splitter().getPanelProps({ id: props.id }))}
         >
-          <div class="min-h-0 p-4 overflow-auto" ref={setListRef} onScrollEnd={action(handleScroll)}>
-            <For
-              each={outline.model.items}
-              fallback={
-                <div class="flex h-full justify-center items-center overflow-hidden space-x-1">
-                  <LoaderCircleIcon class="animate-spin" />
-                  <span>加载中</span>
+          <FloatingPanel.Handler
+            asChild={(props) => (
+              <div {...props()} class="top-0 bg-bg-secondary flex items-center">
+                <h4>大纲</h4>
+                <div class="flex items-center justify-end grow">
+                  <Button size="small" onClick={scrollToFocused}>
+                    <EyeIcon class="mr-1" />
+                    当前浏览
+                  </Button>
+                  <Show when={uiState.isFloating}>
+                    <Button size="small" onClick={action(cancelFloating)}>
+                      <PinOffIcon class="mr-1" />
+                      取消悬浮
+                    </Button>
+                  </Show>
                 </div>
-              }
-            >
-              {(item) => <Item outline={outline} onToggle={outline.model.toggleExpand} item={item} level={0} />}
-            </For>
-          </div>
-        </Show>
-      </div>
-    </FloatingPanel.Main>
+              </div>
+            )}
+          />
+          <Show
+            when={!outline.model.items || outline.model.items.length > 0}
+            fallback={<div class="flex h-full justify-center items-center">无大纲</div>}
+          >
+            <div class="min-h-0 p-4 overflow-auto" ref={setListRef} onScrollEnd={action(handleScroll)}>
+              <For
+                each={outline.model.items}
+                fallback={
+                  <div class="flex h-full justify-center items-center overflow-hidden space-x-1">
+                    <LoaderCircleIcon class="animate-spin" />
+                    <span>加载中</span>
+                  </div>
+                }
+              >
+                {(item) => <Item outline={outline} onToggle={outline.model.toggleExpand} item={item} level={0} />}
+              </For>
+            </div>
+          </Show>
+        </div>
+      )}
+    />
   );
 }
