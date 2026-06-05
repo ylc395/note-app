@@ -30,18 +30,20 @@ export default function Breadcrumbs() {
           <div class={`${itemClassName} italic`}>此笔记</div>
         </Show>
       </div>
-      <Popover.Root lazyMount unmountOnExit closeOnInteractOutside={false}>
-        <Popover.Trigger
-          asChild={(props) => (
-            <Button size="small" {...props()}>
-              <NetworkIcon /> 关联内容
-            </Button>
-          )}
-        />
-        <Popover.Positioner>
-          <LinkList />
-        </Popover.Positioner>
-      </Popover.Root>
+      <Show when={ctx.editor.source.value.result.data}>
+        <Popover.Root lazyMount unmountOnExit closeOnInteractOutside={false}>
+          <Popover.Trigger
+            asChild={(props) => (
+              <Button size="small" {...props()}>
+                <NetworkIcon /> 关联内容
+              </Button>
+            )}
+          />
+          <Popover.Positioner class="z-10!">
+            <LinkList />
+          </Popover.Positioner>
+        </Popover.Root>
+      </Show>
     </div>
   );
 }
