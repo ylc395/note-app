@@ -54,7 +54,11 @@ export default class Outline {
 
     clearTimeout(this.timerId);
     this.stopAutoFocus?.();
-    this.pdfViewer.viewer.jumpTo(dest);
+    this.pdfViewer.viewer.jumpTo(
+      Array.isArray(dest.dest)
+        ? [...dest.dest.slice(0, -1), null] // 最后一位置为 null 表示不要进行缩放
+        : dest.dest,
+    );
     this.timerId = setTimeout(this.autoFocus.bind(this), 500); // 没有什么好办法来确定何时应当重新开启 autoFocus，用定时器凑合
   }
 

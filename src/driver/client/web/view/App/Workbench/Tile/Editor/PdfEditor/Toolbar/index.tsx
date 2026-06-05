@@ -29,22 +29,23 @@ export default function Toolbar() {
   }
 
   return (
-    <div class="flex justify-between py-2 border-b border-border-secondary px-2 relative">
+    <div class="flex justify-between py-2 border-b border-border-secondary pl-2 pr-4 relative">
       <div class="flex text-sm space-x-2">
-        <Button selected={editor.body.uiState.isEnabled} onClick={action(toggleBodyPanel)}>
+        <Button size="small" selected={editor.body.uiState.isEnabled} onClick={action(toggleBodyPanel)}>
           <NotepadTextIcon class="mr-1" />
           笔记
         </Button>
-        <Button selected={editor.outline.uiState.isEnabled} onClick={action(toggleOutlinePanel)}>
+        <Button size="small" selected={editor.outline.uiState.isEnabled} onClick={action(toggleOutlinePanel)}>
           <ListIcon class="mr-1" />
           大纲
         </Button>
-        <Button selected={editor.textFinder.isEnabled} onClick={() => editor.textFinder.toggle()}>
+        <Button size="small" selected={editor.textFinder.isEnabled} onClick={() => editor.textFinder.toggle()}>
           <TextSearchIcon class="mr-1" />
           搜索全文
         </Button>
         <Show when={IS_DEV}>
           <Button
+            size="small"
             selected={editor.texts.displayText}
             onClick={action(() => (editor.texts.displayText = !editor.texts.displayText))}
           >
@@ -71,6 +72,7 @@ export default function Toolbar() {
           <Switch.HiddenInput />
         </Switch.Root>
         <Button
+          size="small"
           selected={editor.annotation.uiState.isEnabled}
           onClick={toggleAnnotationPanel}
           class="flex items-center text-sm"

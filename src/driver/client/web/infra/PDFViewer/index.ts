@@ -367,7 +367,7 @@ export default class PDFViewer {
     return this.core.previousPage();
   };
 
-  public jumpTo(page: number | OutlineItem | string) {
+  public jumpTo(page: number | string | unknown[] | null) {
     assert(this.core?.pdfDocument);
     const totalPage = this.core.pdfDocument.numPages;
 
@@ -379,8 +379,8 @@ export default class PDFViewer {
       this.core.currentPageNumber = page;
     } else if (typeof page === 'string') {
       this.core.linkService.setHash(page);
-    } else if (page.dest) {
-      this.core.linkService.goToDestination(page.dest);
+    } else if (page) {
+      this.core.linkService.goToDestination(page);
     }
   }
 
