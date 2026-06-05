@@ -80,10 +80,14 @@ export default function PdfEditorView() {
     }
   }
 
+  function setRootEl(el: HTMLElement) {
+    pdfViewer.rootEl = el;
+  }
+
   return (
     <ContextProvider viewer={pdfViewer}>
       <Toolbar />
-      <Splitter.Root {...panels()} class="grow flex min-h-0 relative" onResize={action(handleResize)}>
+      <Splitter.Root ref={setRootEl} {...panels()} class="grow flex min-h-0 relative" onResize={action(handleResize)}>
         <Show when={editor().body.uiState.isEnabled}>
           <BodyEditor id={Panel.Body} />
           <Show when={!editor().body.uiState.isFloating}>

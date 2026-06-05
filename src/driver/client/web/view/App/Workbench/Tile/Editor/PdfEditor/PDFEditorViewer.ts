@@ -12,6 +12,8 @@ export default class PDFEditorViewer {
 
   public readonly viewer = new PDFViewer();
 
+  public rootEl: HTMLElement | null = null;
+
   public async init(options: Pick<Options, 'container' | 'view'>) {
     try {
       await when(() => this.editor.isReady, { signal: this.abortController.signal });

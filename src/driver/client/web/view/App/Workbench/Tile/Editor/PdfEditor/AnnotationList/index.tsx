@@ -15,9 +15,8 @@ import { cx } from 'class-variance-authority';
 
 export default function AnnotationList(props: { id: string }) {
   const splitter = useSplitterContext();
-  const {
-    viewer: { editor },
-  } = useContext()!;
+  const { viewer } = useContext()!;
+  const { editor } = viewer;
 
   const uiState = editor.annotation.uiState;
   const [floatingSize, setFloatingSize] = createSignal(uiState.floatingSize || { width: 300, height: 500 });
@@ -76,6 +75,7 @@ export default function AnnotationList(props: { id: string }) {
       onMove={action(handleMove)}
       isEnabled={Boolean(editor.annotation.uiState.isFloating)}
       onMoveEnd={action(handleMoveEnd)}
+      boundaryEl={() => viewer.rootEl}
       size={floatingSize()}
       onResize={action(setFloatingSize)}
       onResizeEnd={action(handleResizeEnd)}

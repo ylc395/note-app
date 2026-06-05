@@ -12,6 +12,7 @@ import {
 } from 'solid-js';
 import { FloatingPanel } from '@ark-ui/solid/floating-panel';
 import assert from 'assert';
+import { clamp } from 'lodash-es';
 
 const FloatingPanelContext = createContext<{
   isEnabled: Accessor<boolean>;
@@ -21,6 +22,7 @@ const FloatingPanelContext = createContext<{
   onMove: (e: { x: number; y: number }) => void;
   onMoveEnd: (e: { x: number; y: number }) => void;
   panelRef: Accessor<HTMLElement | undefined>;
+  boundaryEl?: Accessor<HTMLElement | null>;
 }>();
 
 /**
@@ -40,9 +42,14 @@ function DragDetector(props: { asChild: (props: () => JSX.HTMLAttributes<unknown
     const panel = ctx.panelRef();
     assert(panel);
 
+    // 计算面板相对于 boundaryEl 的初始位置
+    const boundaryEl = ctx.boundaryEl?.() ?? document.body;
+    const panelRect = panel.getBoundingClientRect();
+    const boundaryRect = boundaryEl.getBoundingClientRect();
+
     const panelStartPos = {
-      x: panel.offsetLeft,
-      y: panel.offsetTop,
+      x: panelRect.left - (boundaryRect?.left ?? 0),
+      y: panelRect.top - (boundaryRect?.top ?? 0),
     };
 
     const moveSignal = new AbortController();
@@ -53,7 +60,14 @@ function DragDetector(props: { asChild: (props: () => JSX.HTMLAttributes<unknown
       (moveEvent) => {
         const deltaX = moveEvent.clientX - startX;
         const deltaY = moveEvent.clientY - startY;
-        panelCurrentPos = { x: panelStartPos.x + deltaX, y: panelStartPos.y + deltaY };
+        const panelRect = panel.getBoundingClientRect();
+
+        console.log(boundaryRect, panelRect);
+
+        panelCurrentPos = {
+          x: clamp(panelStartPos.x + deltaX, 0, boundaryRect.width - panelRect.width),
+          y: clamp(panelStartPos.y + deltaY, 0, boundaryRect.height - panelRect.height),
+        };
 
         if (ctx.isTempDragging()) {
           ctx.onMove(panelCurrentPos);
@@ -99,24 +113,66 @@ function Main(props: {
   onMoveStart: (e: { x: number; y: number }) => void;
   onResize?: (e: { width: number; height: number }) => void;
   onResizeEnd?: (e: { width: number; height: number }) => void;
+  boundaryEl?: Accessor<HTMLElement | null>;
 }) {
+  const [panelRef, setPanelRef] = createSignal<HTMLElement>();
+  const [isTempDragging, setIsTempDragging] = createSignal(false);
+
   const position = createMemo(() => {
     const { x, y, left, top } = props.pos;
     return { x: left ?? x ?? 0, y: top ?? y ?? 0 };
   });
-
-  const [panelRef, setPanelRef] = createSignal<HTMLElement>();
-  const [isTempDragging, setIsTempDragging] = createSignal(false);
 
   const contextValue = {
     isEnabled: () => props.isEnabled,
     onMoveStart: props.onMoveStart,
     onMove: props.onMove,
     onMoveEnd: props.onMoveEnd,
+    boundaryEl: props.boundaryEl,
     panelRef,
     isTempDragging,
     setIsTempDragging,
   };
+
+  /**
+   * 将 viewport 相对坐标转换为 boundaryEl 相对坐标
+   */
+  const toBoundaryRelative = (position: { x: number; y: number }) => {
+    const el = panelRef();
+    if (!el) return position;
+
+    const boundaryRect = props.boundaryEl?.()?.getBoundingClientRect();
+
+    return {
+      x: position.x - (boundaryRect?.left ?? 0),
+      y: position.y - (boundaryRect?.top ?? 0),
+    };
+  };
+
+  /**
+   * 将 boundaryEl 相对坐标转换为 viewport 相对坐标（ark-ui 内部使用视口坐标）
+   */
+  const viewportPosition = createMemo(() => {
+    const pos = position();
+    const el = panelRef();
+
+    if (!el) {
+      return pos;
+    }
+
+    const boundaryEl = props.boundaryEl?.();
+
+    if (!boundaryEl) {
+      return pos;
+    }
+
+    const boundaryRect = boundaryEl.getBoundingClientRect();
+
+    return {
+      x: pos.x + boundaryRect.left,
+      y: pos.y + boundaryRect.top,
+    };
+  });
 
   const injectedStyle = createMemo<JSX.CSSProperties>(() => {
     if (!isTempDragging()) return {};
@@ -142,19 +198,21 @@ function Main(props: {
     <FloatingPanelContext.Provider value={contextValue}>
       <Show when={props.isEnabled && !isTempDragging()} fallback={props.asChild(injectedProps)}>
         <FloatingPanel.Root
+          ref={setPanelRef}
           open={true}
-          position={position()}
-          onPositionChange={(e) => props.onMove(e.position)}
-          onPositionChangeEnd={(e) => props.onMoveEnd(e.position)}
+          position={viewportPosition()}
+          allowOverflow={false}
+          getBoundaryEl={props.boundaryEl}
+          onPositionChange={(e) => props.onMove(toBoundaryRelative(e.position))}
+          onPositionChangeEnd={(e) => props.onMoveEnd(toBoundaryRelative(e.position))}
           size={props.size}
           onSizeChange={(e) => props.onResize?.(e.size)}
           onSizeChangeEnd={(e) => props.onResizeEnd?.(e.size)}
-          strategy="absolute"
           draggable
           resizable
         >
           <FloatingPanel.Positioner class="z-10">
-            <FloatingPanel.Content class="overflow-auto" ref={setPanelRef}>
+            <FloatingPanel.Content class="overflow-auto">
               {props.asChild(injectedProps)}
               <FloatingPanel.ResizeTrigger axis="n" class="absolute top-0 left-2 right-2 h-1 cursor-n-resize" />
               <FloatingPanel.ResizeTrigger axis="e" class="absolute top-2 right-0 bottom-2 w-1 cursor-e-resize" />

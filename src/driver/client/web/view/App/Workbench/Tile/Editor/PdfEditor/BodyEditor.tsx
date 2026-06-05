@@ -59,6 +59,7 @@ export default function BodyEditor(props: { id: string }) {
       isEnabled={Boolean(editor.body.uiState.isFloating)}
       onMoveEnd={action(handleMoveEnd)}
       size={floatingSize()}
+      boundaryEl={() => viewer.rootEl}
       onResize={action(setFloatingSize)}
       onResizeEnd={action(handleResizeEnd)}
       asChild={(injected) => (

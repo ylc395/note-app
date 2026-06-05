@@ -91,6 +91,7 @@ export default function Outline(props: { id: string }) {
       size={floatingSize()}
       onResize={action(setFloatingSize)}
       onResizeEnd={action(handleResizeEnd)}
+      boundaryEl={() => viewer.rootEl}
       asChild={(injected) => (
         <div
           class={cx(
