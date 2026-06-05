@@ -1,6 +1,6 @@
 import { autorun } from 'mobx';
 
-import type { EntitySource } from '#domain/client/app/model/base/entitySource';
+import EntitySource from '#domain/client/app/model/base/EntitySource';
 import './style.css';
 
 const DATASET_KEY = 'linkState';

@@ -2,7 +2,7 @@ import type { Ctx } from '@milkdown/kit/ctx';
 import { editorViewCtx } from '@milkdown/kit/core';
 import type { Mark } from '@milkdown/kit/prose/model';
 
-import type { EntitySource } from '#domain/client/app/model/base/entitySource';
+import EntitySource from '#domain/client/app/model/base/EntitySource';
 import { parseAppUrl } from '#domain/shared/infra/url';
 import shell from '#web/infra/shell';
 

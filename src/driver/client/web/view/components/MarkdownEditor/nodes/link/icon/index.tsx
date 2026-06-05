@@ -14,7 +14,7 @@ import { token as documentDbToken } from '#domain/client/shared/infra/documentDb
 import { remoteIconStoreName } from '#domain/client/app/model/note/editor/BaseEditor';
 import { parseAppUrl, toEntityType } from '#domain/shared/infra/url';
 import entitySourceFactory from '#domain/client/app/model/entitySourceFactory';
-import type { EntitySource } from '#domain/client/app/model/base/entitySource';
+import EntitySource from '#domain/client/app/model/base/EntitySource';
 import IconComponent from '#web/view/components/Icon';
 
 import './style.css';

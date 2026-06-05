@@ -8,7 +8,7 @@ import { noop, pick } from 'lodash-es';
 import shell from '#web/infra/shell';
 import container from '#utils/singletonContainer';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
-import type { EntitySource } from '#domain/client/app/model/base/entitySource';
+import EntitySource from '#domain/client/app/model/base/EntitySource';
 import { SearchResultVO } from '#domain/shared/model/search';
 import { getAppUrl } from '#domain/shared/infra/url';
 import Icon from '#web/view/components/Icon';

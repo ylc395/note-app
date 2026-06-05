@@ -10,7 +10,7 @@ import { token as documentDbToken } from '#domain/client/shared/infra/documentDb
 
 import { EventNames, type Events } from './events';
 import type Tile from '../Tile';
-import type { EntitySource } from '../../base/entitySource';
+import EntitySource from '../../base/EntitySource';
 
 export const uiStateStoreName = 'editor_UI_state';
 

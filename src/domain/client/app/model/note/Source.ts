@@ -1,13 +1,11 @@
 import { createQuery } from 'mobx-tanstack-query/preset';
-
-import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import container from '#utils/singletonContainer';
-import { EntityTypes, type EntityPath } from '#domain/shared/model/entity';
-import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
-import type { EntitySource } from '../base/entitySource';
 import { computed } from 'mobx';
 
-export default class NoteSource implements EntitySource<Required<NoteVO>> {
+import { EntityTypes, type EntityPath } from '#domain/shared/model/entity';
+import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
+import EntitySource from '../base/EntitySource';
+
+export default class NoteSource extends EntitySource<Required<NoteVO>> {
   constructor(
     public readonly id: NoteVO['id'],
     options: {
@@ -18,6 +16,11 @@ export default class NoteSource implements EntitySource<Required<NoteVO>> {
       options?: () => { enabled: boolean };
     },
   ) {
+    super({
+      abortSignal: options.signal,
+      options: options.options,
+    });
+
     this.value = createQuery(() => this.remote.note.queryOneById.query(this.id), {
       abortSignal: options.signal,
       queryKey: ['note', this.id] as Readonly<unknown[]>,
@@ -50,8 +53,6 @@ export default class NoteSource implements EntitySource<Required<NoteVO>> {
   }
 
   public readonly type = EntityTypes.Note;
-
-  private readonly remote = container.resolve(rpcToken);
 
   public readonly value;
 
