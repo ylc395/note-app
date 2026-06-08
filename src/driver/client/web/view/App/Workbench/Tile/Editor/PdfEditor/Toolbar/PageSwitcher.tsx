@@ -32,7 +32,7 @@ export default function PageSwitcher() {
 
   return (
     <div class="flex">
-      <Button square onClick={() => viewer.goToPreviousPage()}>
+      <Button size="small" square onClick={() => viewer.goToPreviousPage()}>
         <StepBackIcon />
       </Button>
       <div class="flex items-center mx-1">
@@ -47,7 +47,7 @@ export default function PageSwitcher() {
         <span class="mx-1">/</span>
         {viewer.totalPage ?? '-'}
       </div>
-      <Button square onClick={() => viewer.goToNextPage()}>
+      <Button size="small" square onClick={() => viewer.goToNextPage()}>
         <StepForwardIcon />
       </Button>
     </div>

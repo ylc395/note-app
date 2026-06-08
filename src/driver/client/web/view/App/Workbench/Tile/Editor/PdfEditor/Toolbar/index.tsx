@@ -74,7 +74,7 @@ export default function Toolbar() {
         <Button
           size="small"
           selected={editor.annotation.uiState.isEnabled}
-          onClick={toggleAnnotationPanel}
+          onClick={action(toggleAnnotationPanel)}
           class="flex items-center text-sm"
         >
           <PenLineIcon class="mr-1" />

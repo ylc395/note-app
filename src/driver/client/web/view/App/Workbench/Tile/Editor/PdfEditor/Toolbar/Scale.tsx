@@ -9,11 +9,11 @@ export default function Scale() {
 
   return (
     <div class="flex items-center">
-      <Button square onClick={() => viewer.setScale('down')}>
+      <Button size="small" square onClick={() => viewer.setScale('down')}>
         <ZoomOutIcon />
       </Button>
       <span class="mx-1">{viewer.scale?.text}</span>
-      <Button square onClick={() => viewer.setScale('up')}>
+      <Button size="small" square onClick={() => viewer.setScale('up')}>
         <ZoomInIcon />
       </Button>
     </div>

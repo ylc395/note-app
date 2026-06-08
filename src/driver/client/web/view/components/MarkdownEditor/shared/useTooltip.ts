@@ -75,15 +75,14 @@ export function useTooltip(options: {
       return;
     }
 
-    const boundary = options.boundary ?? (options.ctx.get(rootCtx) as HTMLElement);
-
-    const middleware = [
-      hide({ boundary, strategy: options.hideStrategy ?? 'escaped' }),
-      flip({ boundary }),
-      ...(options.middleware ?? []),
-    ];
-
     const stopAutoUpdate = autoUpdate(reference(), rootEl, async () => {
+      const boundary = options.boundary ?? (options.ctx.get(rootCtx) as HTMLElement);
+      const middleware = [
+        hide({ boundary, strategy: options.hideStrategy ?? 'escaped' }),
+        flip({ boundary }),
+        ...(options.middleware ?? []),
+      ];
+
       const { x, y, middlewareData } = await computePosition(reference(), rootEl!, {
         placement: options.placement ?? 'top',
         middleware,
