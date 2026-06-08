@@ -14,7 +14,7 @@ export default function EntityPreviewer(props: {
   const [isFixed, setIsFixed] = createSignal(props.isInitialFixed || false);
 
   const {
-    entity: { entitySource },
+    entity: { entity },
   } = useContext()!;
 
   createEffect(on(isFixed, (value) => props.onFixedChange?.(value)));
@@ -27,11 +27,11 @@ export default function EntityPreviewer(props: {
     <>
       <div class="relative flex items-center gap-2">
         <h2 class="text-fg-primary font-medium text-sm truncate flex-1">
-          <Show when={entitySource?.value.isLoading}>加载中...</Show>
-          <Show when={entitySource?.value.isError}>无法预览</Show>
-          <Show when={entitySource?.value.isSuccess}>{entitySource?.title}</Show>
+          <Show when={entity?.value.isLoading}>加载中...</Show>
+          <Show when={entity?.value.isError}>无法预览</Show>
+          <Show when={entity?.value.isSuccess}>{entity?.title}</Show>
         </h2>
-        <Show when={!entitySource?.value.isError}>
+        <Show when={!entity?.value.isError}>
           <Button size="small" square onClick={toggleFix}>
             <Show when={isFixed()} fallback={<PinIcon class="size-4" />}>
               <PinOffIcon class="size-4" />
@@ -39,18 +39,18 @@ export default function EntityPreviewer(props: {
           </Button>
         </Show>
       </div>
-      <Show when={entitySource?.blob.isLoading}>
+      <Show when={entity?.blob.isLoading}>
         <div>加载中...</div>
       </Show>
-      <Show when={entitySource?.value.isError || entitySource?.blob.isError}>
+      <Show when={entity?.value.isError || entity?.blob.isError}>
         <div>URL 指向的本地资源不存在</div>
       </Show>
-      <Show when={entitySource?.value.isSuccess && !entitySource?.value.data?.mimeType}>
+      <Show when={entity?.value.isSuccess && !entity?.value.data?.mimeType}>
         <MarkdownPreviewer />
       </Show>
-      <Show when={entitySource?.blob.isSuccess}>
+      <Show when={entity?.blob.isSuccess}>
         <Switch>
-          <Match when={entitySource?.value.data?.mimeType === MimeTypes.PDF}>
+          <Match when={entity?.value.data?.mimeType === MimeTypes.PDF}>
             <PDFPreviewer />
           </Match>
         </Switch>

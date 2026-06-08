@@ -2,7 +2,7 @@ import type { Ctx } from '@milkdown/kit/ctx';
 import { editorViewCtx } from '@milkdown/kit/core';
 import type { Mark } from '@milkdown/kit/prose/model';
 
-import EntitySource from '#domain/client/app/model/base/EntitySource';
+import Entity from '#domain/client/app/model/base/Entity';
 import { parseAppUrl } from '#domain/shared/infra/url';
 import shell from '#web/infra/shell';
 
@@ -12,12 +12,12 @@ export function setupLinkJump({
   dom,
   ctx,
   mark,
-  entitySource,
+  entity,
 }: {
   dom: HTMLAnchorElement;
   ctx: Ctx;
   mark: Mark;
-  entitySource?: EntitySource | null;
+  entity?: Entity | null;
 }) {
   const abortController = new AbortController();
 
@@ -28,18 +28,18 @@ export function setupLinkJump({
       return;
     }
 
-    if (!entitySource) {
+    if (!entity) {
       shell.openNewWindow(mark.attrs.href);
       return;
     }
 
-    if (entitySource.value.isSuccess) {
+    if (entity.value.isSuccess) {
       const appUrl = parseAppUrl(mark.attrs.href);
 
       if (appUrl) {
         ctx.get(customCtx).onJump?.({
           ...appUrl,
-          mimeType: entitySource.mimeType,
+          mimeType: entity.mimeType,
         });
       }
     }

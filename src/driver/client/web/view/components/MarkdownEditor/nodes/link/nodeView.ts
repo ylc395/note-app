@@ -4,7 +4,7 @@ import type { MarkView } from '@milkdown/kit/prose/view';
 import { sanitizeUrl } from '@braintree/sanitize-url';
 
 import { parseAppUrl, toEntityType } from '#domain/shared/infra/url';
-import entitySourceFactory from '#domain/client/app/model/entitySourceFactory';
+import entityFactory from '#domain/client/app/model/entityFactory';
 
 import { setupLinkJump } from './jump';
 import { setupLinkState } from './state';
@@ -17,10 +17,10 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
     const abortController = new AbortController();
     const appUrl = parseAppUrl(mark.attrs.href);
     const entityType = appUrl && toEntityType(appUrl.type);
-    const entitySource = entityType && entitySourceFactory(entityType, appUrl.id, abortController.signal);
+    const entity = entityType && entityFactory(entityType, appUrl.id, abortController.signal);
 
-    const disposeJump = setupLinkJump({ dom, ctx, mark, entitySource });
-    const disposeLinkState = setupLinkState(dom, entitySource);
+    const disposeJump = setupLinkJump({ dom, ctx, mark, entity });
+    const disposeLinkState = setupLinkState(dom, entity);
 
     function destroy() {
       abortController.abort();

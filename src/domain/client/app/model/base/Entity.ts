@@ -6,10 +6,12 @@ import container from '#utils/singletonContainer';
 import type { EntityId, EntityPath, EntityTypes, Icon } from '#domain/shared/model/entity';
 import type { ExternalReference, LinkVO } from '#domain/shared/model/content';
 
+// 一种针对任意类型实体的抽象，便于其他地方能够以同样的方式读取任意类型的实体
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default abstract class EntitySource<T = any> {
+export default abstract class Entity<T = any> {
   constructor(options: { abortSignal: AbortSignal; options?: () => { enabled: boolean } }) {
     this.links = createQuery(() => this.remote.content.queryLinksOf.query(this.id), {
+      abortSignal: options.abortSignal,
       options: () => ({
         ...options.options,
         queryKey: ['links', this.id],

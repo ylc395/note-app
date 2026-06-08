@@ -3,9 +3,9 @@ import { computed } from 'mobx';
 
 import { EntityTypes, type EntityPath } from '#domain/shared/model/entity';
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
-import EntitySource from '../base/EntitySource';
+import Entity from '../base/Entity';
 
-export default class NoteSource extends EntitySource<Required<NoteVO>> {
+export default class NoteEntity extends Entity<Required<NoteVO>> {
   constructor(
     public readonly id: NoteVO['id'],
     options: {

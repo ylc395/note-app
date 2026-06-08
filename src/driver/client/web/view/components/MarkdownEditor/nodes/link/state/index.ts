@@ -1,6 +1,6 @@
 import { autorun } from 'mobx';
 
-import EntitySource from '#domain/client/app/model/base/EntitySource';
+import Entity from '#domain/client/app/model/base/Entity';
 import './style.css';
 
 const DATASET_KEY = 'linkState';
@@ -9,13 +9,13 @@ enum LinkState {
   Invalid = 'invalid',
 }
 
-export function setupLinkState(dom: HTMLAnchorElement, entitySource?: EntitySource | null) {
+export function setupLinkState(dom: HTMLAnchorElement, entity?: Entity | null) {
   const abortController = new AbortController();
 
-  if (entitySource) {
+  if (entity) {
     autorun(
       () => {
-        if (entitySource.value.isError) {
+        if (entity.value.isError) {
           dom.dataset[DATASET_KEY] = LinkState.Invalid;
         } else {
           delete dom.dataset[DATASET_KEY];

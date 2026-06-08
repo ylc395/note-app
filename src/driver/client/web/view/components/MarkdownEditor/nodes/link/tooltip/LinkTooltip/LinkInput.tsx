@@ -1,6 +1,6 @@
 import { cx } from 'class-variance-authority';
 import { SquareArrowOutUpRightIcon } from 'lucide-solid';
-import { createDeferred, createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, on, onCleanup, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { Combobox, useListCollection } from '@ark-ui/solid';
 import { noop, pick } from 'lodash-es';
@@ -8,14 +8,14 @@ import { noop, pick } from 'lodash-es';
 import shell from '#web/infra/shell';
 import container from '#utils/singletonContainer';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
-import EntitySource from '#domain/client/app/model/base/EntitySource';
+import Entity from '#domain/client/app/model/base/Entity';
 import { SearchResultVO } from '#domain/shared/model/search';
 import { getAppUrl } from '#domain/shared/infra/url';
 import Icon from '#web/view/components/Icon';
 
 import { Mode } from './constant';
 import { useContext } from './context';
-import useEntitySource from './useEntitySource';
+import makeEntity from './makeEntity';
 
 type Item = Pick<SearchResultVO, 'id' | 'type' | 'title' | 'icon' | 'path'> & { mimeType: string | null };
 
@@ -28,10 +28,9 @@ export default function LinkInput(props: {
 }) {
   const remote = container.resolve(remoteToken);
   const { entity } = useContext()!;
-  const [targetSource, setTargetSource] = createSignal<EntitySource>();
+  const [targetSource, setTargetSource] = createSignal<Entity>();
   const [value, setValue] = createSignal(props.initialValue);
-  const deferredValue = createDeferred(value, { timeoutMs: 800 });
-  const isUnaccessible = createMemo(() => props.mode !== Mode.Preview || entity.entitySource?.value.isError);
+  const isUnaccessible = createMemo(() => props.mode !== Mode.Preview || entity.entity?.value.isError);
 
   const { collection, clear, set } = useListCollection<Item>({
     initialItems: [],
@@ -55,52 +54,53 @@ export default function LinkInput(props: {
     props.onInput(value());
   });
 
-  createEffect(() => {
-    if (props.mode === Mode.Preview) {
-      return;
-    }
+  createEffect(
+    on(value, (value) => {
+      setTargetSource(undefined);
+      clear();
 
-    clear();
-    setTargetSource(undefined);
-
-    if (URL.canParse(deferredValue())) {
-      if (deferredValue() === props.initialValue) {
+      if (!value) {
         return;
       }
 
-      const { entitySource } = useEntitySource({ url: deferredValue() });
+      // 如果是 url 的形式：若是 app url 则请求下相应的资源；否则无视
+      if (URL.canParse(value)) {
+        const { entity } = makeEntity({ url: value });
 
-      if (entitySource) {
-        setTargetSource(entitySource);
+        if (entity) {
+          setTargetSource(entity);
+        }
+
+        return;
       }
 
-      return;
-    }
+      // 不是 URL 则当作普通字符串进行搜索
+      const abortController = new AbortController();
 
-    const abortController = new AbortController();
-    remote.search.search.mutate({ keyword: deferredValue() }, { signal: abortController.signal }).then(
-      (result) =>
-        set(
-          result.map((item) => ({
-            ...item,
-            mimeType: item.file?.mimeType || null,
-          })),
-        ),
-      noop,
-    );
+      remote.search.search.mutate({ keyword: value }, { signal: abortController.signal }).then(
+        (result) =>
+          set(
+            result.map((item) => ({
+              ...item,
+              mimeType: item.file?.mimeType || null,
+            })),
+          ),
+        noop,
+      );
 
-    onCleanup(() => {
-      abortController.abort();
-    });
-  });
+      onCleanup(() => {
+        abortController.abort();
+      });
+    }),
+  );
 
   createEffect(() => {
     const data = targetSource();
 
-    if (data?.value.data && data.path.data) {
+    if (data?.value.isSuccess && data.path.data) {
       set([
         {
-          ...pick(data.value.data, ['id', 'type', 'title', 'icon']),
+          ...pick(data, ['id', 'type', 'title', 'icon']),
           path: data.path.data,
           mimeType: data.mimeType || null,
         },
@@ -115,7 +115,7 @@ export default function LinkInput(props: {
       onClick={handleUrlClick}
     >
       <Show
-        when={entity.entitySource?.path.isSuccess && props.mode === Mode.Preview}
+        when={entity.entity?.path.isSuccess && props.mode === Mode.Preview}
         fallback={
           <Combobox.Root
             collection={collection()}
@@ -170,12 +170,10 @@ export default function LinkInput(props: {
         }
       >
         <div class="text-fg-primary truncate">
-          {[...entity.entitySource!.path.data!, { title: entity.entitySource?.title }].map((p) => p.title).join('/')}
+          {[...entity.entity!.path.data!, { title: entity.entity?.title }].map((p) => p.title).join('/')}
         </div>
       </Show>
-      <Show
-        when={props.mode === Mode.Preview && !entity.entitySource?.value.isError && !entity.entitySource?.path.isError}
-      >
+      <Show when={props.mode === Mode.Preview && !entity.entity?.value.isError && !entity.entity?.path.isError}>
         <SquareArrowOutUpRightIcon class="size-4 text-fg-secondary shrink-0" />
       </Show>
     </div>

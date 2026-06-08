@@ -16,7 +16,7 @@ import { callCommand, type $Command, type $MarkSchema } from '@milkdown/kit/util
 import { Portal } from 'solid-js/web';
 import { createMemo, createSignal, Show } from 'solid-js';
 import { posToDOMRect } from '@milkdown/kit/prose';
-import { offset } from '@floating-ui/dom';
+import { inline, offset } from '@floating-ui/dom';
 
 import shell from '#web/infra/shell';
 import LinkView, { Mode } from '../nodes/link/tooltip/LinkTooltip';
@@ -37,6 +37,19 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
 
     return {
       getBoundingClientRect: () => posToDOMRect(view, from, to),
+      getClientRects: () => {
+        const start = view.domAtPos(from);
+        const end = view.domAtPos(to);
+
+        try {
+          const range = document.createRange();
+          range.setStart(start.node, start.offset);
+          range.setEnd(end.node, end.offset);
+          return Array.from(range.getClientRects());
+        } catch {
+          return [];
+        }
+      },
       contextElement: view.dom,
     };
   });
@@ -45,7 +58,7 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
     ctx: props.ctx,
     reference: virtualElement(),
     placement: 'top',
-    middleware: [offset(16)],
+    middleware: [inline(), offset(16)],
     onEscape: props.onClose,
   });
 
@@ -68,11 +81,11 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
 
   return (
     <Portal mount={shell.appRoot}>
-      <div
-        ref={setTooltipEl}
-        class="absolute rounded-lg border border-border-primary bg-surface-raised px-1 py-1 shadow-md"
-      >
-        <Show when={menu() === 'main'}>
+      <Show when={menu() === 'main'}>
+        <div
+          ref={setTooltipEl}
+          class="absolute rounded-lg border border-border-primary bg-surface-raised px-1 py-1 shadow-md"
+        >
           <div class="flex items-center gap-0.5">
             <Button square selected={rangeHasMark(emphasisSchema)} onClick={action(toggleEmphasisCommand)}>
               <ItalicIcon />
@@ -99,11 +112,11 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
               </Button>
             </Show>
           </div>
-        </Show>
-        <Show when={menu() === 'link'}>
-          <LinkView initialMode={Mode.Edit} onClose={returnToMain} ctx={props.ctx} />
-        </Show>
-      </div>
+        </div>
+      </Show>
+      <Show when={menu() === 'link'}>
+        <LinkView initialMode={Mode.Edit} onClose={returnToMain} ctx={props.ctx} />
+      </Show>
     </Portal>
   );
 }

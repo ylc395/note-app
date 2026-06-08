@@ -11,7 +11,7 @@ import DomainEventBus, { type UpdatedEvent } from '../EventBus';
 import ResourceManager from './Uploader';
 import BaseEditor, { Options as BaseOptions } from '../../Workbench/BaseEditor';
 import IconManager from '../IconManager';
-import NoteSource from '../Source';
+import NoteEntity from '../NoteEntity';
 
 export type Action = (editor: BaseEditor) => void;
 
@@ -36,7 +36,7 @@ export default abstract class NoteBaseEditor extends BaseEditor<Required<NoteVO>
 
     this.resourceManager?.eventBus.on(ResourceManager.EventNames.Uploaded, this.reload.bind(this, true));
 
-    this.source = new NoteSource(options.entityId, {
+    this.source = new NoteEntity(options.entityId, {
       signal: this.destroyController.signal,
       blob: resourceManager?.file?.data,
       path: options.path,

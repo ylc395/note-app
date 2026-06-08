@@ -10,7 +10,7 @@ import { token as documentDbToken } from '#domain/client/shared/infra/documentDb
 
 import { EventNames, type Events } from './events';
 import type Tile from '../Tile';
-import EntitySource from '../../base/EntitySource';
+import Entity from '../../base/Entity';
 
 export const uiStateStoreName = 'editor_UI_state';
 
@@ -31,7 +31,7 @@ export default abstract class BaseEditor<T = unknown> {
     });
   }
 
-  public abstract readonly source: EntitySource<T>;
+  public abstract readonly source: Entity<T>;
 
   private readonly db = container.resolve(documentDbToken);
 

@@ -13,7 +13,7 @@ import Button from '#web/view/components/Button';
 import EntityPreviewer from './EntityPreviewer';
 import LinkInput from './LinkInput';
 import { Mode } from './constant';
-import useEntitySource from './useEntitySource';
+import makeEntity from './makeEntity';
 import { ContextProvider } from './context';
 
 export { Mode } from './constant';
@@ -61,7 +61,7 @@ export default function Tooltip(props: {
 
   let inputRef: HTMLInputElement | undefined;
 
-  const entity = useEntitySource({
+  const entity = makeEntity({
     url: initialUrl,
     ctx: props.ctx,
   });
@@ -148,7 +148,7 @@ export default function Tooltip(props: {
         onMouseLeave={props.onMouseLeave}
         onMouseEnter={props.onMouseEnter}
       >
-        <Show when={entity.entitySource && mode() === Mode.Preview}>
+        <Show when={entity.entity && mode() === Mode.Preview}>
           <EntityPreviewer onFixedChange={props.onFixedChange} />
         </Show>
         <LinkInput mode={mode()} ref={inputRef} initialValue={initialUrl} onInput={setUrl} onSelect={handleSelect} />

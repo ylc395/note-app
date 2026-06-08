@@ -3,15 +3,15 @@ import type { Ctx } from '@milkdown/kit/ctx';
 
 import { parseAppUrl, toEntityType } from '#domain/shared/infra/url';
 import { customCtx } from '#web/view/components/MarkdownEditor/customCtx';
-import entitySourceFactory from '#domain/client/app/model/entitySourceFactory';
+import entityFactory from '#domain/client/app/model/entityFactory';
 
-export default function useEntitySource(props: { url: string; ctx?: Ctx }) {
+export default function makeEntity(props: { url: string; ctx?: Ctx }) {
   const appUrl = parseAppUrl(props.url);
+  const entityType = appUrl && toEntityType(appUrl.type);
   const abortController = new AbortController();
 
-  const source = untrack(() => {
-    const entityType = appUrl && toEntityType(appUrl.type);
-    return entityType && entitySourceFactory(entityType, appUrl.id, abortController.signal);
+  const entity = untrack(() => {
+    return entityType && entityFactory(entityType, appUrl.id, abortController.signal);
   });
 
   const jump =
@@ -19,7 +19,7 @@ export default function useEntitySource(props: { url: string; ctx?: Ctx }) {
       ? () =>
           props.ctx?.get(customCtx).onJump?.({
             ...appUrl,
-            mimeType: source?.value.data?.mimeType,
+            mimeType: entity?.value.data?.mimeType,
           })
       : null;
 
@@ -28,7 +28,7 @@ export default function useEntitySource(props: { url: string; ctx?: Ctx }) {
   });
 
   return {
-    entitySource: source,
+    entity,
     jump,
   };
 }

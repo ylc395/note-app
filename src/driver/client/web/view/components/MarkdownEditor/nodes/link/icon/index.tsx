@@ -13,8 +13,8 @@ import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 import { token as documentDbToken } from '#domain/client/shared/infra/documentDb';
 import { remoteIconStoreName } from '#domain/client/app/model/note/editor/BaseEditor';
 import { parseAppUrl, toEntityType } from '#domain/shared/infra/url';
-import entitySourceFactory from '#domain/client/app/model/entitySourceFactory';
-import EntitySource from '#domain/client/app/model/base/EntitySource';
+import entityFactory from '#domain/client/app/model/entityFactory';
+import Entity from '#domain/client/app/model/base/Entity';
 import IconComponent from '#web/view/components/Icon';
 
 import './style.css';
@@ -23,8 +23,8 @@ import { GlobeIcon } from 'lucide-solid';
 const pluginKey = new PluginKey<Map<string, LinkIconInfo>>('LINK_ICON');
 
 interface LinkIconInfo {
-  entitySource: EntitySource | null;
-  iconQuery?: Query<Blob | null>; // entitySource 和 iconQuery 只会有一个
+  entity: Entity | null;
+  iconQuery?: Query<Blob | null>; // entity 和 iconQuery 只会有一个
   abortController: AbortController;
 }
 
@@ -85,7 +85,7 @@ export const linkIconPlugin = $prose((ctx) => {
 
           if (prevHasSameLink) return;
 
-          // 从缓存获取或创建 entitySource / iconQuery
+          // 从缓存获取或创建 entity / iconQuery
           const entry = getOrCreateCacheEntry(cache, href);
 
           decorations.push(
@@ -115,7 +115,7 @@ export const linkIconPlugin = $prose((ctx) => {
 
 /**
  * 从缓存获取或创建 LinkIconCacheEntry。
- * 以 href 为 key，确保同一 URL 只创建一次 entitySource / iconQuery。
+ * 以 href 为 key，确保同一 URL 只创建一次 entity / iconQuery。
  */
 function getOrCreateCacheEntry(cache: Map<string, LinkIconInfo>, href: string) {
   const existing = cache.get(href);
@@ -125,11 +125,11 @@ function getOrCreateCacheEntry(cache: Map<string, LinkIconInfo>, href: string) {
   const entityType = appUrl && toEntityType(appUrl.type);
   const abortController = new AbortController();
 
-  let entitySource: EntitySource | null = null;
+  let entity: Entity | null = null;
   let iconQuery;
 
   if (entityType) {
-    entitySource = entitySourceFactory(entityType, appUrl!.id, abortController.signal);
+    entity = entityFactory(entityType, appUrl!.id, abortController.signal);
   } else {
     // 外部链接：创建 iconQuery
     const remote = container.resolve(remoteToken);
@@ -170,7 +170,7 @@ function getOrCreateCacheEntry(cache: Map<string, LinkIconInfo>, href: string) {
     );
   }
 
-  const entry = { entitySource, iconQuery, abortController };
+  const entry = { entity, iconQuery, abortController };
   cache.set(href, entry);
 
   return entry;
@@ -180,16 +180,13 @@ function getOrCreateCacheEntry(cache: Map<string, LinkIconInfo>, href: string) {
  * 使用 SolidJS render 将图标挂载到指定容器。
  *
  * 两条路径：
- * 1. 有 entitySource（内部链接）→ 使用 <Icon> 组件渲染 entitySource.icon/mimeType
- * 2. 无 entitySource（外部 URL）→ 使用缓存的 iconQuery，异步渲染 Blob 图标
+ * 1. 有 entity（内部链接）→ 使用 <Icon> 组件渲染 entity.icon/mimeType
+ * 2. 无 entity（外部 URL）→ 使用缓存的 iconQuery，异步渲染 Blob 图标
  */
 function renderLinkIcon(domContainer: HTMLElement, entry: LinkIconInfo) {
-  if (entry.entitySource) {
-    // 内部链接：使用 entitySource 的 icon 和 mimeType
-    render(
-      () => <IconComponent icon={entry.entitySource!.icon} mimeType={entry.entitySource!.mimeType} />,
-      domContainer,
-    );
+  if (entry.entity) {
+    // 内部链接：使用 entity 的 icon 和 mimeType
+    render(() => <IconComponent icon={entry.entity!.icon} mimeType={entry.entity!.mimeType} />, domContainer);
     return;
   }
 
