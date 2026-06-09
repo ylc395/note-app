@@ -1,5 +1,5 @@
 import { Dialog, type DialogOpenChangeDetails } from '@ark-ui/solid/dialog';
-import { type JSXElement, Show } from 'solid-js';
+import { createMemo, type JSXElement, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { XIcon } from 'lucide-solid';
 import shell from '#web/infra/shell';
@@ -12,6 +12,7 @@ export default function Modal(props: {
   title: string;
   bottom?: JSXElement;
   onConfirm?: () => void;
+  size?: 'sm' | 'md' | 'lg';
   canConfirm?: boolean;
   confirmText?: string;
   onCancel?: () => void;
@@ -23,6 +24,8 @@ export default function Modal(props: {
       props.onClose?.();
     }
   }
+
+  const size = createMemo(() => props.size ?? 'md');
 
   return (
     <Dialog.Root
@@ -36,16 +39,24 @@ export default function Modal(props: {
         <Portal mount={shell.appRoot}>
           <Dialog.Backdrop class="fixed inset-0 bg-bg-overlay z-10" />
           <Dialog.Positioner class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-            <Dialog.Content class="bg-surface-overlay p-6 rounded-lg w-md">
+            <Dialog.Content
+              class="bg-surface-overlay p-6 rounded-lg"
+              classList={{ ['w-lg']: size() === 'md', ['w-3xl']: size() === 'lg', ['w-sm']: size() === 'sm' }}
+            >
               <div class="flex justify-between pb-3 mb-4 border-b border-border-secondary">
                 <Dialog.Title class="text-lg">{props.title}</Dialog.Title>
-                <Dialog.CloseTrigger class="button">
-                  <XIcon />
-                </Dialog.CloseTrigger>
+                <Dialog.CloseTrigger
+                  class="button"
+                  asChild={(props) => (
+                    <Button square {...props()}>
+                      <XIcon />
+                    </Button>
+                  )}
+                ></Dialog.CloseTrigger>
               </div>
               {props.children}
               <Show
-                when={props.bottom}
+                when={props.bottom !== undefined}
                 fallback={
                   <div class="mt-6 text-right space-x-4 flex justify-end">
                     <Show when={props.cancelText !== null}>

@@ -32,15 +32,15 @@ export default function Toolbar() {
     <div class="flex justify-between py-2 border-b border-border-secondary pl-2 pr-4 relative">
       <div class="flex text-sm space-x-2">
         <Button size="small" selected={editor.body.uiState.isEnabled} onClick={action(toggleBodyPanel)}>
-          <NotepadTextIcon class="mr-1" />
+          <NotepadTextIcon />
           笔记
         </Button>
         <Button size="small" selected={editor.outline.uiState.isEnabled} onClick={action(toggleOutlinePanel)}>
-          <ListIcon class="mr-1" />
+          <ListIcon />
           大纲
         </Button>
         <Button size="small" selected={editor.textFinder.isEnabled} onClick={() => editor.textFinder.toggle()}>
-          <TextSearchIcon class="mr-1" />
+          <TextSearchIcon />
           搜索全文
         </Button>
         <Show when={IS_DEV}>

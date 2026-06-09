@@ -1,7 +1,7 @@
-import { memoize } from 'lodash-es';
+import { maxBy, memoize, minBy } from 'lodash-es';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import { action, computed, observable } from 'mobx';
-import { applyPatch, diffChars } from 'diff';
+import { applyPatch, diffChars, type Change } from 'diff';
 import assert from 'assert';
 
 import type { EntityId } from '#domain/shared/model/entity';
@@ -84,6 +84,37 @@ export default class RevisionList {
       body: { text: body, diff: bodyDiff },
     };
   });
+
+  @observable.ref
+  public accessor changes: { oldRevision: RevisionVO; newRevision: RevisionVO; diffs: Change[] } | undefined =
+    undefined;
+
+  @action
+  public clearChanges() {
+    this.changes = undefined;
+  }
+
+  @action
+  public diff(revisionId: RevisionVO['id']) {
+    const targetRevision = this.data.result.data?.find((r) => r.id === revisionId);
+    const currentRevision = this.data.result.data?.find((r) => r.id === this.currentRevisionId);
+    assert(targetRevision && currentRevision);
+
+    if (targetRevision === currentRevision) {
+      return false;
+    }
+
+    const newRevision = maxBy([targetRevision, currentRevision], (r) => r.createdAt)!;
+    const oldRevision = minBy([targetRevision, currentRevision], (r) => r.createdAt)!;
+
+    this.changes = {
+      oldRevision,
+      newRevision,
+      diffs: diffChars(this.getVersion(oldRevision.id).body.text, this.getVersion(newRevision.id).body.text),
+    };
+
+    return true;
+  }
 
   @action
   public destroy() {

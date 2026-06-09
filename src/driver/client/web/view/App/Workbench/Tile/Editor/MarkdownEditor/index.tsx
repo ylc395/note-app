@@ -9,7 +9,7 @@ import type Editor from '#web/view/components/MarkdownEditor/Editor';
 import { useContext, useEditorBody } from '../composables';
 import Empty from './Empty';
 import Button from '#web/view/components/Button';
-import { FullscreenIcon, ListIcon, SearchIcon } from 'lucide-solid';
+import { FullscreenIcon, ListIcon, TextSearchIcon } from 'lucide-solid';
 
 export default function MarkdownEditorView() {
   const [getEditor, setEditor] = createSignal<Editor>();
@@ -39,12 +39,12 @@ export default function MarkdownEditorView() {
       <div class="min-h-0 grow overflow-hidden">
         <div class="flex py-2 pl-2 pr-4 border-b border-border-secondary">
           <Button size="small">
-            <SearchIcon />
-            查找
-          </Button>
-          <Button size="small">
             <ListIcon />
             大纲
+          </Button>
+          <Button size="small">
+            <TextSearchIcon />
+            查找
           </Button>
           <Button size="small">
             <FullscreenIcon />
