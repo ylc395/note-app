@@ -2,7 +2,7 @@ import { Collapsible, Tooltip } from '@ark-ui/solid';
 import { ChevronRightIcon, ChevronDownIcon } from 'lucide-solid';
 import { createMemo, For, Show } from 'solid-js';
 
-import type { OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
+import type { OutlineItem } from '#domain/client/app/model/Workbench/noteEditor/PdfEditor';
 import type Outline from './Outline';
 
 function Title(props: { item: OutlineItem; outline: Outline; isFocused: boolean; class?: string }) {

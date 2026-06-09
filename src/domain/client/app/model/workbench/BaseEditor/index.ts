@@ -31,7 +31,7 @@ export default abstract class BaseEditor<T = unknown> {
     });
   }
 
-  public abstract readonly source: Entity<T>;
+  public abstract readonly entity: Entity<T>;
 
   private readonly db = container.resolve(documentDbToken);
 
@@ -116,10 +116,10 @@ export default abstract class BaseEditor<T = unknown> {
   public toObject() {
     return {
       entityId: this.entityId,
-      entityType: this.source.type,
+      entityType: this.entity.type,
       mimeType: this.mimeType,
-      title: this.source.title || '',
-      icon: this.source.icon,
+      title: this.entity.title || '',
+      icon: this.entity.icon,
     };
   }
 

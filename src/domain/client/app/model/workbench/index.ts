@@ -7,7 +7,8 @@ import type { EntityId, EntityTypes } from '#domain/shared/model/entity';
 
 import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
-import EditorFactory, { type EditorDTO } from './EditorFactory';
+import EditorFactory from './EditorFactory';
+import type { EditorDTO } from './BaseEditor/types';
 import HistoryStack from '../base/HistoryStack';
 import RecentManager from './RecentManager';
 import UIState from './UIState';
@@ -92,15 +93,15 @@ export default class Workbench {
 
   private async handleEditorFocus(editor: Editor) {
     assert(this.root);
-    await when(() => editor.source.value.result.isLoadingError || editor.source.value.result.isSuccess); // 确保 editor 的信息（如 title / mimeType）加载好了
+    await when(() => editor.entity.value.result.isLoadingError || editor.entity.value.result.isSuccess); // 确保 editor 的信息（如 title / mimeType）加载好了
 
     this.historyStack.push({
       mimeType: editor.mimeType,
-      entityType: editor.source.type,
+      entityType: editor.entity.type,
       key: editor.id,
       entityId: editor.entityId,
       tileId: editor.tile.id,
-      title: editor.source.title,
+      title: editor.entity.title,
     });
   }
 
@@ -260,13 +261,13 @@ export default class Workbench {
     destTile.switchToEditor(editor);
 
     when(
-      () => editor.source.value.isSuccess,
+      () => editor.entity.value.isSuccess,
       () => {
         this.recentManager.add({
           entityId: editor.entityId,
           mimeType: editor.mimeType,
-          entityType: editor.source.type,
-          title: editor.source.title!,
+          entityType: editor.entity.type,
+          title: editor.entity.title!,
         });
       },
     );

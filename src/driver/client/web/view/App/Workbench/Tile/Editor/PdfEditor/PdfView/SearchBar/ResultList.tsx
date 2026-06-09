@@ -1,7 +1,7 @@
 import { createMemo, For, onMount } from 'solid-js';
 import assert from 'assert';
 
-import type { Digest } from '#domain/client/app/model/note/editor/PdfEditor/TextFinder';
+import type { Digest } from '#domain/client/app/model/Workbench/noteEditor/PdfEditor/TextFinder';
 import { useContext } from '../../context';
 
 function DigestView(props: { digest: Digest; index: number }) {

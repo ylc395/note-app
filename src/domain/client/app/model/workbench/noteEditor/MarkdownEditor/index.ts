@@ -5,7 +5,7 @@ import z from 'zod';
 
 import BaseEditor, { type Options } from '../BaseEditor';
 import ResourceManager from '../Uploader';
-import type { EditorDTO } from '../../../Workbench/EditorFactory';
+import type { EditorDTO } from '../../BaseEditor/types';
 
 const uiStateSchema = z.object({
   scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
@@ -30,7 +30,7 @@ export default class MarkdownEditor extends BaseEditor {
 
   @computed
   public get isReady() {
-    return Boolean(this.source.value.data && this.uiState);
+    return Boolean(this.entity.value.data && this.uiState);
   }
 
   private async initUIState() {
@@ -53,7 +53,7 @@ export default class MarkdownEditor extends BaseEditor {
   public override mimeType = null;
 
   private get isEmptyBody() {
-    return this.source.value.data?.body === '';
+    return this.content === '';
   }
 
   @computed
@@ -97,10 +97,10 @@ export default class MarkdownEditor extends BaseEditor {
 
     this.tile.replace(this, {
       entityId: this.entityId,
-      entityType: this.source.type,
+      entityType: this.entity.type,
       mimeType: mimeType,
-      value: this.source.value.data,
-      path: this.source.path.data,
+      value: this.entity.value.data,
+      path: this.entity.path.data,
       resourceManager: isTemp ? resourceManager : undefined,
     } satisfies Options & EditorDTO);
   }

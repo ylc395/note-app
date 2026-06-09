@@ -61,6 +61,11 @@ export default class NoteEntity extends Entity<Required<NoteVO>> {
   public readonly blob;
 
   @computed
+  public get content() {
+    return this.value.data?.body;
+  }
+
+  @computed
   public get title() {
     return this.value.data ? normalizeTitle(this.value.data) : '';
   }

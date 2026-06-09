@@ -1,5 +1,5 @@
 import { Show } from 'solid-js';
-import type Downloader from '#domain/client/app/model/note/editor/Uploader/Downloader';
+import type Downloader from '#domain/client/app/model/Workbench/noteEditor/Uploader/Downloader';
 
 export default function UrlInput(props: { remoteUploader: Downloader }) {
   return (

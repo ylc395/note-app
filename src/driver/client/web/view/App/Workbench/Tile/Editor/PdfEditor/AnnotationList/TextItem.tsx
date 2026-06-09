@@ -3,7 +3,7 @@ import { createMemo, Show } from 'solid-js';
 import assert from 'assert';
 
 import { getPageRange, type AnnotationVO } from '#domain/client/app/model/annotation';
-import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import PdfEditor from '#domain/client/app/model/Workbench/noteEditor/PdfEditor';
 import { useContext } from '../../composables';
 import { first, last } from 'lodash-es';
 

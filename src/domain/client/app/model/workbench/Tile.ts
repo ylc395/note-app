@@ -5,7 +5,8 @@ import assert from 'assert';
 import Editor from './BaseEditor';
 import container from '#utils/singletonContainer';
 
-import EditorFactory, { type EditorDTO } from './EditorFactory';
+import EditorFactory from './EditorFactory';
+import type { EditorDTO } from './BaseEditor/types';
 import type { EntityId } from '#domain/shared/model/entity';
 import type Workbench from './index';
 

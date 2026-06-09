@@ -34,7 +34,7 @@ export default class PdfEditor extends BaseEditor {
   constructor(...args: ConstructorParameters<typeof BaseEditor>) {
     super(...args);
 
-    when(() => this.source.blob.result.isSuccess, this.init.bind(this), { signal: this.destroyController.signal });
+    when(() => this.entity.blob.result.isSuccess, this.init.bind(this), { signal: this.destroyController.signal });
     this.initUIState();
   }
 
@@ -82,11 +82,11 @@ export default class PdfEditor extends BaseEditor {
   }
 
   private async init() {
-    assert(this.source.blob.result.data);
+    assert(this.entity.blob.result.data);
 
     const doc = await this.docFactory.create({
       key: this.entityId,
-      blob: this.source.blob.result.data,
+      blob: this.entity.blob.result.data,
     });
 
     this.texts.setDoc(doc);

@@ -1,6 +1,6 @@
 import { MousePointerSquareDashedIcon } from 'lucide-solid';
 import ShapeSelector from './ShapeSelector';
-import { Mode } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
+import { Mode } from '#domain/client/app/model/Workbench/noteEditor/PdfEditor/SvgAnnotationEditor';
 import { useContext } from '../../context';
 
 export default function SvgEditorBar() {

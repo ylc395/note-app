@@ -1,6 +1,8 @@
 import { Show } from 'solid-js';
 
-import SvgAnnotationEditor, { Shape } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
+import SvgAnnotationEditor, {
+  Shape,
+} from '#domain/client/app/model/Workbench/noteEditor/PdfEditor/SvgAnnotationEditor';
 import FreeShape from './FreeShape';
 import RegularShape from './RegularShape';
 import { useContext } from '../../../context';

@@ -1,30 +1,19 @@
-import type Tile from './Tile';
-import Editor, { Options as EditorOptions } from './BaseEditor';
-import { EntityId, EntityTypes } from '#domain/shared/model/entity';
 import assert from 'assert';
 
-export interface EditorDTO<T = unknown> extends EditorOptions<T> {
-  mimeType: string | null;
-  entityType: EntityTypes;
-}
-
-export type Factory<T = unknown> = (editor: EditorDTO, tile: Tile) => Editor<T>;
+import { EntityTypes } from '#domain/shared/model/entity';
+import type Tile from './Tile';
+import Editor from './BaseEditor';
+import noteEditorFactory from './noteEditor/factory';
+import type { EditorDTO, Factory } from './BaseEditor/types';
+import type NoteBaseEditor from './noteEditor/BaseEditor';
 
 export default class EditorFactory {
   private readonly editorsMap = new Map<Editor['id'], Editor>();
 
-  private readonly entityEditorMap = new Map<EntityId, Editor[]>();
-
   public create(tile: Tile, config: EditorDTO) {
-    const factory = EditorFactory.factories.get(config.entityType);
-    assert(factory);
+    const editor = EditorFactory.factoryMap[config.entityType](config, tile);
 
-    const editor = factory(config, tile);
-    const entityEditors = this.entityEditorMap.get(config.entityId) || [];
-    entityEditors.push(editor);
-    this.entityEditorMap.set(config.entityId, entityEditors);
     this.editorsMap.set(editor.id, editor);
-
     editor.events.on(Editor.eventNames.Destroy, this.handleEditorDestroyed.bind(this));
 
     return editor;
@@ -38,10 +27,13 @@ export default class EditorFactory {
     return this.editorsMap.get(id);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static readonly factories = new Map<EntityTypes, Factory<any>>();
-
-  public static registryFactory<T>(type: EntityTypes, factory: Factory<T>) {
-    EditorFactory.factories.set(type, factory);
+  public static assertIsEditor(value: unknown): asserts value is NoteBaseEditor {
+    assert(value instanceof Editor);
   }
+
+  private static readonly factoryMap: Readonly<Record<EntityTypes, Factory>> = {
+    [EntityTypes.Note]: noteEditorFactory,
+    [EntityTypes.Memo]: assert.fail,
+    [EntityTypes.Annotation]: assert.fail,
+  };
 }

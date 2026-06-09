@@ -12,7 +12,7 @@ import {
 } from '#domain/shared/model/search';
 import Workbench from '#domain/client/app/model/Workbench';
 import type { PDFTextPositionSelector } from '#domain/shared/model/annotation';
-import type { EditorDTO } from '#domain/client/app/model/Workbench/EditorFactory';
+import type { EditorDTO } from '#domain/client/app/model/Workbench/BaseEditor/types';
 import { EntityTypes } from '#domain/shared/model/entity';
 
 function highlight({ text, highlights }: MatchRecord) {

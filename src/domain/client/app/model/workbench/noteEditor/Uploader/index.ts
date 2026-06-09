@@ -5,7 +5,7 @@ import { FileDTO } from '#domain/shared/model/file';
 
 import Downloader, { type DownloadedFile } from './Downloader';
 import EventBus from '#domain/client/shared/infra/EventBus';
-import FileNoteUploader from '../../FileNoteUploader';
+import FileNoteUploader from '../../../note/FileNoteUploader';
 
 export type FileToUpload = Required<Pick<FileDTO, 'mimeType' | 'data' | 'name'>> & { hash: string; sourceUrl?: string };
 

@@ -4,8 +4,8 @@ import { debounce, intersection, omit, range } from 'lodash-es';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
 
 import { IS_DEV } from '#domain/shared/infra/env';
-import type { Position } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
-import type { SelectionState } from '#domain/client/app/model/note/editor/PdfEditor/selectionState';
+import type { Position } from '#domain/client/app/model/Workbench/noteEditor/PdfEditor/AnnotationManager';
+import type { SelectionState } from '#domain/client/app/model/Workbench/noteEditor/PdfEditor/selectionState';
 import CommentEditor from './CommentEditor';
 import type PDFEditorViewer from '../../../PDFEditorViewer';
 

@@ -1,7 +1,7 @@
 import { createMemo } from 'solid-js';
 import { useContext } from './composables';
 import assert from 'assert';
-import NoteBaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
+import NoteBaseEditor from '#domain/client/app/model/Workbench/noteEditor/BaseEditor';
 
 export default function PreviewTip() {
   const editor = createMemo(() => {

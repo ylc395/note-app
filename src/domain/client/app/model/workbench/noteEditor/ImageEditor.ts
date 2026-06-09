@@ -1,4 +1,4 @@
-import type Tile from '../../Workbench/Tile';
+import type Tile from '../Tile';
 import BaseEditor, { type Options } from './BaseEditor';
 
 export default class ImageEditor extends BaseEditor {

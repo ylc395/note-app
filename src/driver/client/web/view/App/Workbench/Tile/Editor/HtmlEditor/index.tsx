@@ -1,7 +1,7 @@
 import { createEffect, createMemo, onMount } from 'solid-js';
 import assert from 'assert';
 
-import HtmlEditor from '#domain/client/app/model/note/editor/HtmlEditor';
+import HtmlEditor from '#domain/client/app/model/Workbench/noteEditor/HtmlEditor';
 import useHtml from './useHtml';
 import { useContext } from '../composables';
 

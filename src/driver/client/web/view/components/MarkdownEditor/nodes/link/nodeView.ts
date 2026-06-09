@@ -4,7 +4,7 @@ import type { MarkView } from '@milkdown/kit/prose/view';
 import { sanitizeUrl } from '@braintree/sanitize-url';
 
 import { parseAppUrl, toEntityType } from '#domain/shared/infra/url';
-import entityFactory from '#domain/client/app/model/entityFactory';
+import { entityFactory } from '#domain/client/app/model/entityFactory';
 
 import { setupLinkJump } from './jump';
 import { setupLinkState } from './state';

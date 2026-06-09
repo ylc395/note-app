@@ -1,5 +1,8 @@
 import type { Query } from 'mobx-tanstack-query';
 import { createQuery } from 'mobx-tanstack-query/preset';
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { toString as mdastToString } from 'mdast-util-to-string';
+import { computed } from 'mobx';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import container from '#utils/singletonContainer';
@@ -49,4 +52,36 @@ export default abstract class Entity<T = any> {
   abstract readonly blob?: Query<ArrayBuffer>;
   public readonly links;
   abstract readonly mimeType: string | null;
+
+  public abstract content: string | undefined;
+
+  @computed
+  public get pureTextWordCount() {
+    if (typeof this.content !== 'string') {
+      return undefined;
+    }
+
+    const text = mdastToString(fromMarkdown(this.content));
+
+    // 以下算法从 https://github.com/lepture/word-count/blob/main/index.mjs 抄的
+    const pattern =
+      /[a-zA-Z0-9'_\u0392-\u03c9\u00c0-\u00ff\u0600-\u06ff\u0400-\u04ff]+[a-zA-Z0-9'_\u0392-\u03c9\u00c0-\u00ff\u0600-\u06ff\u0400-\u04ff-]*|[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u309f\uac00-\ud7af]+/g;
+    const m = text.match(pattern);
+
+    let count = 0;
+
+    if (!m) {
+      return 0;
+    }
+
+    for (let i = 0; i < m.length; i++) {
+      if (m[i]!.charCodeAt(0) >= 0x4e00) {
+        count += m[i]!.length;
+      } else {
+        count += 1;
+      }
+    }
+
+    return count;
+  }
 }

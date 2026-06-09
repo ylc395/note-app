@@ -1,6 +1,6 @@
 import assert from 'assert';
 import { createMemo, Show } from 'solid-js';
-import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor';
+import MarkdownEditor from '#domain/client/app/model/Workbench/noteEditor/MarkdownEditor';
 
 import LocalFileUploader from './LocalFileUploader';
 import RemoteFileUploader from './RemoteFileUploader';

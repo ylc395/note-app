@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { maxBy } from 'lodash-es';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
-import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import PdfEditor from '#domain/client/app/model/Workbench/noteEditor/PdfEditor';
 import { useContext } from '../../composables';
 
 export default function SvgItem(props: { value: AnnotationVO[] }) {

@@ -16,6 +16,6 @@ export default class HtmlEditor extends BaseEditor {
 
   @computed
   public get html() {
-    return this.source.blob.data && toText(this.source.blob.data);
+    return this.entity.blob.data && toText(this.entity.blob.data);
   }
 }

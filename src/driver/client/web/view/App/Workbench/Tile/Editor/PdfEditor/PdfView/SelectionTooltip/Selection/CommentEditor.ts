@@ -6,7 +6,7 @@ import { range, zip } from 'lodash-es';
 import {
   default as AnnotationManager,
   type Position,
-} from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
+} from '#domain/client/app/model/Workbench/noteEditor/PdfEditor/AnnotationManager';
 import type PDFEditorViewer from '../../../PDFEditorViewer';
 
 export default class CommentEditor {

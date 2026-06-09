@@ -8,11 +8,8 @@ import { arrayOf, type MaybeArray } from '#utils/collection';
 import { EntityTypes } from '#domain/shared/model/entity';
 
 import DomainEventBus from '../model/note/EventBus';
-import BaseEditor from '../model/note/editor/BaseEditor';
-import editorFactory from '../model/note/editor/factory';
-
+import BaseEditor from '../model/Workbench/noteEditor/BaseEditor';
 import Workbench from '../model/Workbench';
-import EditorFactory from '../model/Workbench/EditorFactory';
 
 export default class NoteService {
   private readonly eventBus = container.resolve(DomainEventBus);
@@ -49,7 +46,7 @@ export default class NoteService {
     }
 
     if (value instanceof BaseEditor) {
-      return value.source.value.data;
+      return value.entity.value.data;
     }
 
     if (Array.isArray(value)) {
@@ -57,9 +54,5 @@ export default class NoteService {
     }
 
     return undefined;
-  }
-
-  public static boot() {
-    EditorFactory.registryFactory(EntityTypes.Note, editorFactory);
   }
 }

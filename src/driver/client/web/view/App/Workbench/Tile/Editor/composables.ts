@@ -3,7 +3,7 @@ import { createEffect, createMemo, on } from 'solid-js';
 import assert from 'assert';
 
 import type BaseEditor from '#domain/client/app/model/Workbench/BaseEditor';
-import NoteBaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
+import NoteBaseEditor from '#domain/client/app/model/Workbench/noteEditor/BaseEditor';
 import type Editor from '#web/view/components/MarkdownEditor/Editor';
 import Workbench from '#domain/client/app/model/Workbench';
 import container from '#utils/singletonContainer';
@@ -28,7 +28,7 @@ export function useEditorBody(getMdEditor: () => Editor | undefined) {
   // 其他编辑器改动内容时，本编辑器同步更新
   createEffect(
     on(
-      () => editor().source.value.data?.body,
+      () => editor().content,
       (body) => {
         const mdEditor = getMdEditor();
         if (mdEditor?.isCreated && typeof body === 'string' && workbench.currentEditor && !editor().isGlobalCurrent) {
@@ -38,11 +38,11 @@ export function useEditorBody(getMdEditor: () => Editor | undefined) {
     ),
   );
 
-  function onUpdate(text: string) {
+  function updateBody(text: string) {
     if (editor().isGlobalCurrent) {
       editor().update({ body: text });
     }
   }
 
-  return { onUpdate };
+  return { updateBody };
 }

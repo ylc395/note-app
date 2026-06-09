@@ -8,7 +8,7 @@
 // import '@svgdotjs/svg.draggable.js';
 
 // import type { AnnotationVO } from '#domain/shared/model/annotation';
-// import SvgAnnotationEditor, { Mode } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
+// import SvgAnnotationEditor, { Mode } from '#domain/client/app/model/Workbench/noteEditor/PdfEditor/SvgAnnotationEditor';
 // import { useContext } from '../context';
 
 // export default function SvgAnnotation(props: {

@@ -22,7 +22,7 @@ export default function BodyEditor(props: { id: string }) {
   const [floatingSize, setFloatingSize] = createSignal(uiState.floatingSize || { width: 300, height: 500 });
   const [floatingPos, setFloatingPos] = createSignal(uiState.floatingPos || { x: 20, y: 20 });
 
-  const { onUpdate } = useEditorBody(getMdEditor);
+  const { updateBody } = useEditorBody(getMdEditor);
 
   function handleScrollEnd(e: { x: number; y: number }) {
     uiState.scroll = e;
@@ -86,12 +86,12 @@ export default function BodyEditor(props: { id: string }) {
               </div>
             )}
           />
-          <Show when={editor.source.value.data}>
+          <Show when={editor.entity.value.data}>
             {(note) => (
               <MarkdownEditor
                 ref={setMdEditor}
                 className="border-r-border-primary border-r h-full grow p-2"
-                onUpdate={onUpdate}
+                onUpdate={updateBody}
                 defaultValue={note().body}
                 initialScroll={uiState.scroll}
                 initialCursorPos={uiState.cursorPos}

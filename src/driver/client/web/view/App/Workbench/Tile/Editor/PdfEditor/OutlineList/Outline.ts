@@ -1,6 +1,6 @@
 import { action, reaction } from 'mobx';
 
-import type { OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor/OutlineList';
+import type { OutlineItem } from '#domain/client/app/model/Workbench/noteEditor/PdfEditor/OutlineList';
 
 import type PDFEditorViewer from '../PDFEditorViewer';
 

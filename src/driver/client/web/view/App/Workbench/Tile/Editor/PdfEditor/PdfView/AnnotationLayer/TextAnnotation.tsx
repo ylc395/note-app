@@ -12,7 +12,7 @@ import { createTrigger } from '@solid-primitives/trigger';
 import shell from '#web/infra/shell';
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import { APP_NAME } from '#domain/shared/infra/constants';
-import AnnotationManager from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
+import AnnotationManager from '#domain/client/app/model/Workbench/noteEditor/PdfEditor/AnnotationManager';
 import { getPageRange } from '#domain/client/app/model/annotation';
 
 import { useContext } from '../../context';

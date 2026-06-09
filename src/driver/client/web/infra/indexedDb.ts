@@ -6,7 +6,7 @@ import { APP_NAME } from '#domain/shared/infra/constants';
 import {
   uiStateStoreName as editorUIStoreName,
   remoteIconStoreName,
-} from '#domain/client/app/model/note/editor/BaseEditor';
+} from '#domain/client/app/model/Workbench/noteEditor/BaseEditor';
 import type { DocumentDb } from '#domain/client/shared/infra/documentDb';
 import { IS_CLEAN_DEV } from '#domain/shared/infra/env';
 

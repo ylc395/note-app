@@ -9,7 +9,7 @@ import ImageEditor from './ImageEditor';
 import MarkdownEditor from './MarkdownEditor';
 import PdfEditor from './PdfEditor';
 import UnknownEditor from './UnknownEditor';
-import type { EditorDTO, Factory as EditorFactory } from '../../Workbench/EditorFactory';
+import type { EditorDTO, Factory as EditorFactory } from '../BaseEditor/types';
 
 function isValidConfig(config: EditorDTO): config is EditorDTO<Required<NoteVO>> {
   return config.entityType === EntityTypes.Note;

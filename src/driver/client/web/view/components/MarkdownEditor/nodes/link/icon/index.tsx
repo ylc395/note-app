@@ -11,9 +11,9 @@ import type { Query } from 'mobx-tanstack-query';
 import container from '#utils/singletonContainer';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 import { token as documentDbToken } from '#domain/client/shared/infra/documentDb';
-import { remoteIconStoreName } from '#domain/client/app/model/note/editor/BaseEditor';
+import { remoteIconStoreName } from '#domain/client/app/model/Workbench/noteEditor/BaseEditor';
 import { parseAppUrl, toEntityType } from '#domain/shared/infra/url';
-import entityFactory from '#domain/client/app/model/entityFactory';
+import { entityFactory } from '#domain/client/app/model/entityFactory';
 import Entity from '#domain/client/app/model/base/Entity';
 import IconComponent from '#web/view/components/Icon';
 

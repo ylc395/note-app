@@ -1,6 +1,6 @@
 import { action, reaction, when } from 'mobx';
 import PDFViewer, { type Options } from '#web/infra/PDFViewer';
-import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import type PdfEditor from '#domain/client/app/model/Workbench/noteEditor/PdfEditor';
 import { clone, debounce } from 'lodash-es';
 
 // 这是一个粘合 model（PDFEditor） 和 infra（PDFViewer）的类

@@ -1,7 +1,7 @@
 import { createMemo, Show } from 'solid-js';
 import assert from 'assert';
 
-import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor';
+import MarkdownEditor from '#domain/client/app/model/Workbench/noteEditor/MarkdownEditor';
 import UrlInput from './UrlInput';
 import DownloadingProgress from './DownloadingProgress';
 

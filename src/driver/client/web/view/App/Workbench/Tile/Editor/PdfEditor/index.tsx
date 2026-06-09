@@ -4,7 +4,7 @@ import { action } from 'mobx';
 import { compact, sum, zipObject } from 'lodash-es';
 import assert from 'assert';
 
-import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import PdfEditor from '#domain/client/app/model/Workbench/noteEditor/PdfEditor';
 
 import AnnotationList from './AnnotationList';
 import PdfView from './PdfView';

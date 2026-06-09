@@ -4,7 +4,7 @@ import { createEventListener } from '@solid-primitives/event-listener';
 import assert from 'assert';
 import { createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { Shape } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
+import { Shape } from '#domain/client/app/model/Workbench/noteEditor/PdfEditor/SvgAnnotationEditor';
 
 const methodMap = {
   [Shape.Circle]: 'circle',
