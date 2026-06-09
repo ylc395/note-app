@@ -15,7 +15,7 @@ export default function Modal(props: {
   canConfirm?: boolean;
   confirmText?: string;
   onCancel?: () => void;
-  cancelText?: string;
+  cancelText?: string | null;
   closeOnInteractOutside?: boolean;
 }) {
   function handleOpenChange({ open }: DialogOpenChangeDetails) {
@@ -48,10 +48,17 @@ export default function Modal(props: {
                 when={props.bottom}
                 fallback={
                   <div class="mt-6 text-right space-x-4 flex justify-end">
-                    <Button size="lg" onClick={props.onCancel}>
-                      {props.cancelText ?? '取 消'}
-                    </Button>
-                    <Button size="lg" intent="primary" disabled={props.canConfirm} onClick={props.onConfirm}>
+                    <Show when={props.cancelText !== null}>
+                      <Button size="lg" onClick={props.onCancel}>
+                        {props.cancelText ?? '取 消'}
+                      </Button>
+                    </Show>
+                    <Button
+                      size="lg"
+                      intent="primary"
+                      disabled={props.canConfirm}
+                      onClick={props.onConfirm || props.onClose}
+                    >
                       {props.confirmText ?? '确 认'}
                     </Button>
                   </div>

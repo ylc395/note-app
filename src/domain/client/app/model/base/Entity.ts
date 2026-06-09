@@ -1,13 +1,12 @@
 import type { Query } from 'mobx-tanstack-query';
 import { createQuery } from 'mobx-tanstack-query/preset';
-import { fromMarkdown } from 'mdast-util-from-markdown';
-import { toString as mdastToString } from 'mdast-util-to-string';
 import { computed } from 'mobx';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import container from '#utils/singletonContainer';
 import type { EntityId, EntityPath, EntityTypes, Icon } from '#domain/shared/model/entity';
 import type { ExternalReference, LinkVO } from '#domain/shared/model/content';
+import { markdownToPlain } from '#domain/shared/infra/markdown/parse';
 
 // 一种针对任意类型实体的抽象，便于其他地方能够以同样的方式读取任意类型的实体
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,7 +60,7 @@ export default abstract class Entity<T = any> {
       return undefined;
     }
 
-    const text = mdastToString(fromMarkdown(this.content));
+    const text = markdownToPlain(this.content);
 
     // 以下算法从 https://github.com/lepture/word-count/blob/main/index.mjs 抄的
     const pattern =

@@ -2,7 +2,7 @@ import { compact } from 'lodash-es';
 
 import type { MemoPatchDTO, Memo, ClientMemoQuery } from '#domain/server/model/memo.js';
 import type { MemoRepository, MemoQuery } from '#domain/server/repository/memoRepository.js';
-import ContentService from '#domain/server/service/ContentService/index.js';
+import { markdownToPlain } from '#domain/shared/infra/markdown/parse.js';
 import { EntityTypes } from '#domain/shared/model/entity.js';
 
 import BaseRepository from './BaseRepository.js';
@@ -14,7 +14,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   private readonly tableName = schema.tableName;
 
   public async create(memo: Memo) {
-    const bodyPlainText = ContentService.markdownToPlain(memo.body);
+    const bodyPlainText = markdownToPlain(memo.body);
     await this.db
       .insertInto(this.tableName)
       .values({ ...memo, bodyPlainText, type: EntityTypes.Memo })
@@ -24,7 +24,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   public async update(id: Memo['id'], patch: MemoPatchDTO) {
-    const bodyPlainText = typeof patch.body === 'string' ? ContentService.markdownToPlain(patch.body) : undefined;
+    const bodyPlainText = typeof patch.body === 'string' ? markdownToPlain(patch.body) : undefined;
     const updatedRow = await this.db
       .updateTable(this.tableName)
       .where((eb) => eb.and([eb('id', '=', id), eb('type', '=', EntityTypes.Memo)]))

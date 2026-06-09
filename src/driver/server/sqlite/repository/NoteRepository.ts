@@ -1,7 +1,7 @@
 import { keyBy, mapValues, compact } from 'lodash-es';
 import { sql } from 'kysely';
 
-import ContentService from '#domain/server/service/ContentService/index.js';
+import { markdownToPlain } from '#domain/shared/infra/markdown/parse.js';
 import type { NoteRepository } from '#domain/server/repository/noteRepository.js';
 import { EntityTypes } from '#domain/shared/model/entity.js';
 import type { Note, NoteVO, NewNote, NotePatch, NoteQuery } from '#domain/server/model/note.js';
@@ -16,7 +16,7 @@ import FileRepository from './FileRepository.js';
 export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
   public readonly tableName = schema.tableName;
   public async create(note: NewNote) {
-    const bodyPlainText = ContentService.markdownToPlain(note.body);
+    const bodyPlainText = markdownToPlain(note.body);
     const row = await this.db
       .insertInto(this.tableName)
       .values({ ...note, icon: note.icon && JSON.stringify(note.icon), bodyPlainText, type: EntityTypes.Note })
@@ -27,7 +27,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   }
 
   public async update(id: NoteVO['id'] | NoteVO['id'][], note: NotePatch) {
-    const bodyPlainText = typeof note.body === 'string' ? ContentService.markdownToPlain(note.body) : undefined;
+    const bodyPlainText = typeof note.body === 'string' ? markdownToPlain(note.body) : undefined;
     const { numUpdatedRows } = await this.db
       .updateTable(this.tableName)
       .where('id', Array.isArray(id) ? 'in' : '=', id)

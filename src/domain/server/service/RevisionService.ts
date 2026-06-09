@@ -32,7 +32,9 @@ export default class RevisionService extends BaseService {
 
   @BaseService.transaction
   private async autoCreateRevisions() {
-    if (this.isBusy || !this.interval) {
+    assert(this.interval);
+
+    if (this.isBusy) {
       return;
     }
 
@@ -126,14 +128,19 @@ export default class RevisionService extends BaseService {
   }
 
   private static sort(revisions: Revision[]) {
-    const revisionMap = keyBy(revisions, ({ id }) => id);
-    let node = revisions.find(({ previousId }) => previousId === null);
+    if (revisions.length === 0) return [];
 
+    const nextByPreviousId = new Map<Revision['previousId'], Revision>();
+    for (const rev of revisions) {
+      nextByPreviousId.set(rev.previousId, rev);
+    }
+
+    let node = nextByPreviousId.get(null);
     const sorted: Revision[] = [];
 
     while (node) {
       sorted.push(node);
-      node = node.previousId ? revisionMap[node.previousId] : undefined;
+      node = nextByPreviousId.get(node.id);
     }
 
     return sorted;

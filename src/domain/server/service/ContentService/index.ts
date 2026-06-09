@@ -1,16 +1,11 @@
-import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { Root } from 'mdast';
 import { EXIT, SKIP, visit } from 'unist-util-visit';
-import { compact, memoize, size, uniq, uniqBy } from 'lodash-es';
+import { compact, size, uniq, uniqBy } from 'lodash-es';
 import { is } from 'unist-util-is';
 import { toString } from 'mdast-util-to-string';
 import escapeStringRegexp from 'escape-string-regexp';
 import { getFragmentDirectives, parseFragmentDirectives } from 'text-fragments-polyfill/text-fragment-utils';
 
-import {
-  mdastExtension as topicExtension,
-  tokenExtension as topicTokenExtension,
-} from '#domain/shared/infra/markdown/syntax/topic.js';
 import container from '#utils/singletonContainer.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
 import {
@@ -21,12 +16,13 @@ import {
   LinkTargetType,
 } from '#domain/server/model/content.js';
 import type { TopicQuery, TopicVO } from '#domain/shared/model/topic.js';
+import { arrayOf, type MaybeArray } from '#utils/collection.js';
+import { parseMarkdown } from '#domain/shared/infra/markdown/parse.js';
 
 import BaseService from '../BaseService.js';
 import EntityService from '../EntityService.js';
 import LinkExtractor from './LinkExtractor.js';
 import TopicExtractor from './TopicExtractor.js';
-import { arrayOf, type MaybeArray } from '#utils/collection.js';
 
 export default class ContentService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
@@ -37,7 +33,7 @@ export default class ContentService extends BaseService {
     }
 
     const extractors = [new TopicExtractor(id), new LinkExtractor(id)];
-    const mdAst = ContentService.parseMarkdown(body);
+    const mdAst = parseMarkdown(body);
 
     try {
       visit(mdAst, (node) => extractors.forEach((extractor) => extractor.visit(node)));
@@ -128,7 +124,7 @@ export default class ContentService extends BaseService {
 
     for await (const { body, id } of contents) {
       const locations: Record<string, Snippet> = {};
-      const mdAst = ContentService.parseMarkdown(body);
+      const mdAst = parseMarkdown(body);
 
       for (const { location } of locationGroups[id]!) {
         const snippet = this.getSnippetByLocation(mdAst, location);
@@ -226,7 +222,7 @@ export default class ContentService extends BaseService {
         }
 
         const directives = parseFragmentDirectives({ text });
-        const mdast = ContentService.parseMarkdown(body);
+        const mdast = parseMarkdown(body);
         const blockNodeTypes = ['blockquote', 'code', 'heading', 'paragraph', 'definition'];
         let snippet: Snippet | undefined;
 
@@ -294,18 +290,7 @@ export default class ContentService extends BaseService {
     return result;
   }
 
-  private static readonly parseMarkdown = memoize((content: string) => {
-    return fromMarkdown(content, {
-      mdastExtensions: [topicExtension],
-      extensions: [topicTokenExtension],
-    });
-  });
-
   private static hashLocation({ start, end }: TextLocation) {
     return `${start},${end}`;
-  }
-
-  public static markdownToPlain(md: string) {
-    return toString(this.parseMarkdown(md));
   }
 }

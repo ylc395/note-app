@@ -2,7 +2,6 @@ import { compact, keyBy, pick } from 'lodash-es';
 import z from 'zod';
 
 import type { AnnotationRepository } from '#domain/server/repository/annotationRepository.js';
-import ContentService from '#domain/server/service/ContentService/index.js';
 import type { Annotation, AnnotationPatchDTO } from '#domain/shared/model/annotation.js';
 import { EntityTypes, type EntityId } from '#domain/shared/model/entity.js';
 import { annotationSchema } from '#domain/shared/infra/apiSchema/annotation.js';
@@ -11,7 +10,7 @@ import BaseRepository from './BaseRepository.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as noteTableName } from '../schema/note.js';
 import { tableName as fileTableName } from '../schema/file.js';
-
+import { markdownToPlain } from '#domain/shared/infra/markdown/parse.js';
 const detailsSchema = z.object({
   selector: annotationSchema.shape.selector,
 });
@@ -42,7 +41,7 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
   }
 
   public async create(annotation: Annotation) {
-    const bodyPlainText = ContentService.markdownToPlain(annotation.body);
+    const bodyPlainText = markdownToPlain(annotation.body);
     await this.db
       .insertInto(this.tableName)
       .values({
@@ -84,7 +83,7 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
   }
 
   public async update(annotationId: Annotation['id'], patch: AnnotationPatchDTO) {
-    const bodyPlainText = typeof patch.body === 'string' ? ContentService.markdownToPlain(patch.body) : undefined;
+    const bodyPlainText = typeof patch.body === 'string' ? markdownToPlain(patch.body) : undefined;
     const updated = await this.db
       .updateTable(this.tableName)
       .set({
