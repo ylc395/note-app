@@ -1,10 +1,13 @@
 import { debounce, pick, defaults } from 'lodash-es';
 import { computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
+import { toString } from 'mdast-util-to-string';
+import { visit } from 'unist-util-visit';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { type NotePatchDTO, type NoteVO } from '#domain/shared/model/note';
+import { parseMarkdown } from '#domain/shared/infra/markdown/parse';
 
 import type Tile from '../Tile';
 import DomainEventBus, { type UpdatedEvent } from '../../note/EventBus';
@@ -19,6 +22,13 @@ export const remoteIconStoreName = 'remote_icon';
 
 export interface Options extends BaseOptions<Required<NoteVO>> {
   resourceManager?: ResourceManager;
+}
+
+export interface TocItem {
+  position: number[];
+  depth: number;
+  text: string;
+  children?: TocItem[];
 }
 
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
@@ -75,6 +85,43 @@ export default abstract class NoteBaseEditor extends BaseEditor<Required<NoteVO>
   @computed
   public get icon() {
     return this.entity.icon || this.options.icon;
+  }
+
+  @computed
+  public get toc() {
+    if (!this.content) {
+      return null;
+    }
+
+    const ast = parseMarkdown(this.content);
+    const root: TocItem = { depth: 0, text: '', position: [] };
+    const stack: TocItem[] = [root];
+
+    visit(ast, 'heading', (node) => {
+      // 不知为何，在完全没有标题的文档中， 会解析出没有 children 的 heading
+      if (node.children.length === 0) {
+        return;
+      }
+
+      // 弹出所有深度 >= 当前深度的节点，找到合适的父节点
+      while (stack.at(-1)!.depth >= node.depth) {
+        stack.pop();
+      }
+
+      const parent = stack.at(-1)!;
+      const position = [...parent.position, parent.children?.length ?? 0];
+
+      const item: TocItem = {
+        depth: node.depth,
+        text: toString(node),
+        position,
+      };
+
+      (parent.children ??= []).push(item);
+      stack.push(item);
+    });
+
+    return root.children ?? [];
   }
 
   public readonly update = (patch: Patch) => {

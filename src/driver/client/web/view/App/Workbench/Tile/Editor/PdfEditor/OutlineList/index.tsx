@@ -124,11 +124,11 @@ export default function Outline(props: { id: string }) {
             when={!outline.model.items || outline.model.items.length > 0}
             fallback={<div class="flex h-full justify-center items-center">无大纲</div>}
           >
-            <div class="min-h-0 p-4 overflow-auto" ref={setListRef} onScrollEnd={action(handleScroll)}>
+            <div class="grow p-4 overflow-auto" ref={setListRef} onScrollEnd={action(handleScroll)}>
               <For
                 each={outline.model.items}
                 fallback={
-                  <div class="flex h-full justify-center items-center overflow-hidden space-x-1">
+                  <div class="flex h-full justify-center items-center">
                     <LoaderCircleIcon class="animate-spin" />
                     <span>加载中</span>
                   </div>

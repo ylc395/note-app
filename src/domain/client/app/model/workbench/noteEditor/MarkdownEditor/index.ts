@@ -10,6 +10,12 @@ import type { EditorDTO } from '../../BaseEditor/types';
 const uiStateSchema = z.object({
   scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
   cursorPos: z.object({ anchor: z.number(), head: z.number() }).optional().catch(undefined),
+  outline: z
+    .object({
+      enabled: z.boolean().catch(true),
+      size: z.number().catch(20),
+    })
+    .catch({ enabled: true, size: 20 }),
 });
 
 export default class MarkdownEditor extends BaseEditor {
@@ -37,7 +43,7 @@ export default class MarkdownEditor extends BaseEditor {
     const uiState = await this.getUIState(uiStateSchema);
 
     runInAction(() => {
-      this.uiState = uiState || {};
+      this.uiState = uiState || { outline: { enabled: true, size: 20 } };
     });
 
     autorun(

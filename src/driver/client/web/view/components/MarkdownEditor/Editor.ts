@@ -15,6 +15,7 @@ import { replaceAll } from '@milkdown/kit/utils';
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import assert from 'assert';
+import { action, observable } from 'mobx';
 
 import multimedia from './nodes/multimedia';
 import link from './nodes/link';
@@ -86,6 +87,64 @@ export default class Editor {
         ctx.set(editorViewOptionsCtx, { editable: () => !props.readonly });
         ctx.update(uploadConfig.key, (config) => ({ ...config, uploader }));
       });
+
+    props.root.addEventListener('scrollend', this.handleScrollend);
+  }
+
+  /**
+   * 遍历文档中的所有 heading 节点，通过 TOC 层级栈计算每个 heading 的 position
+   * @param fn 回调，接收 (headingPosition, pos)。返回 false 可提前终止遍历
+   */
+  private forEachHeading(fn: (headingPosition: number[], pos: number) => boolean | void): void {
+    const editorView = this.core.ctx.get(editorViewCtx);
+    const doc = editorView.state.doc;
+
+    const stack = [{ depth: 0, position: [] as number[], childrenCount: 0 }];
+    let stop = false;
+
+    doc.descendants((node, pos) => {
+      if (stop) return false;
+      if (node.type.name !== 'heading') return;
+
+      const depth = node.attrs.level as number;
+
+      // 弹出所有深度 >= 当前深度的栈帧，找到合适的父标题
+      while (stack.length > 0 && stack.at(-1)!.depth >= depth) {
+        stack.pop();
+      }
+
+      const parent = stack.at(-1)!;
+      const headingPosition = [...parent.position, parent.childrenCount];
+      parent.childrenCount++;
+
+      stack.push({ depth, position: headingPosition, childrenCount: 0 });
+
+      if (fn(headingPosition, pos) === false) {
+        stop = true;
+        return false;
+      }
+    });
+  }
+
+  public scrollIntoHeading(position: number[]) {
+    if (!this.isCreated) return;
+
+    let targetPos: number | null = null;
+
+    this.forEachHeading((headingPosition, pos) => {
+      if (headingPosition.length === position.length && headingPosition.every((v, i) => v === position[i])) {
+        targetPos = pos;
+        return false; // 找到目标，终止遍历
+      }
+    });
+
+    if (targetPos !== null) {
+      const editorView = this.core.ctx.get(editorViewCtx);
+      const dom = editorView.nodeDOM(targetPos);
+      if (dom instanceof HTMLElement) {
+        dom.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   }
 
   public setReadonly(value: boolean) {
@@ -142,6 +201,7 @@ export default class Editor {
   }
 
   public async destroy() {
+    (this.core.ctx.get(rootCtx) as HTMLElement).removeEventListener('scrollend', this.handleScrollend);
     await this.core.destroy(true);
   }
 
@@ -156,6 +216,34 @@ export default class Editor {
   public init() {
     return this.core.create();
   }
+
+  @observable.ref
+  public accessor currentHeadingPosition: number[] | undefined;
+
+  private readonly handleScrollend = action(() => {
+    if (!this.isCreated) return;
+
+    const editorView = this.core.ctx.get(editorViewCtx);
+    const rootEl = this.core.ctx.get(rootCtx) as HTMLElement;
+    const rootRect = rootEl.getBoundingClientRect();
+    let currentPosition: number[] | undefined;
+
+    this.forEachHeading((headingPosition, pos) => {
+      if (currentPosition) {
+        return false;
+      }
+
+      const dom = editorView.nodeDOM(pos);
+
+      if (dom instanceof HTMLElement) {
+        if (dom.getBoundingClientRect().bottom > rootRect.top) {
+          currentPosition = headingPosition;
+        }
+      }
+    });
+
+    this.currentHeadingPosition = currentPosition;
+  });
 
   private readonly jump: NonNullable<CustomContext['onJump']> = ({ type, id, mimeType }) => {
     const workbench = singletonContainer.resolve(Workbench);
