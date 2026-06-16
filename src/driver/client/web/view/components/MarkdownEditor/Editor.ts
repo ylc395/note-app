@@ -15,7 +15,11 @@ import { replaceAll } from '@milkdown/kit/utils';
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import assert from 'assert';
-import { action, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
+import singletonContainer from '#utils/singletonContainer';
+import Workbench from '#domain/client/app/model/Workbench';
+import { RouteTypes } from '#domain/shared/infra/url';
+import { EntityTypes } from '#domain/shared/model/entity';
 
 import multimedia from './nodes/multimedia';
 import link from './nodes/link';
@@ -31,10 +35,7 @@ import cursor from './cursor';
 import selectionHighlight from './selectionHighlight';
 import './index.css';
 import { customCtx, type CustomContext } from './customCtx';
-import singletonContainer from '#utils/singletonContainer';
-import Workbench from '#domain/client/app/model/Workbench';
-import { RouteTypes } from '#domain/shared/infra/url';
-import { EntityTypes } from '#domain/shared/model/entity';
+import search, { Searcher, type Options as SearcherOptions } from './search';
 
 /** 一些关于 milkdown 的知识
  *
@@ -59,8 +60,14 @@ import { EntityTypes } from '#domain/shared/model/entity';
  */
 export default class Editor {
   private readonly core: MilkdownEditor;
+  readonly searcher: Searcher;
 
-  constructor(props: { readonly?: boolean; root: HTMLElement; defaultValue?: string }) {
+  constructor(props: {
+    readonly?: boolean;
+    root: HTMLElement;
+    defaultValue?: string;
+    defaultSearchOptions?: SearcherOptions;
+  }) {
     this.core = MilkdownEditor.make()
       .use(without(commonmark, ...commonmarkKeymap)) // 不要引入快捷键。我们自己定制
       .use([
@@ -76,18 +83,34 @@ export default class Editor {
       .use(selectionTooltip)
       .use(selectionHighlight) // 使得编辑器失去焦点时，选区仍然能高亮（浏览器的原生行为是使得选区失去高亮效果）
       .use(history)
+      .use(search)
       .use(upload)
       .use(slashMenu)
       .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了
       .use(listener)
       .config((ctx) => {
         ctx.inject(customCtx, { onJump: this.jump.bind(this) });
+
         ctx.set(rootCtx, props.root);
         ctx.set(defaultValueCtx, props.defaultValue || '');
-        ctx.set(editorViewOptionsCtx, { editable: () => !props.readonly });
+        ctx.set(editorViewOptionsCtx, {
+          editable: () => !props.readonly,
+          scrollMargin: 80, // 为 sticky 搜索栏预留顶部空间，避免搜索结果被遮挡
+        });
         ctx.update(uploadConfig.key, (config) => ({ ...config, uploader }));
       });
 
+    this.core.onStatusChange(
+      action((status) => {
+        this.status = status;
+
+        if (this.isReady) {
+          this.searcher.init();
+        }
+      }),
+    );
+
+    this.searcher = new Searcher(this.core.ctx, props.defaultSearchOptions);
     props.root.addEventListener('scrollend', this.handleScrollend);
   }
 
@@ -127,7 +150,7 @@ export default class Editor {
   }
 
   public scrollIntoHeading(position: number[]) {
-    if (!this.isCreated) return;
+    if (!this.isReady) return;
 
     let targetPos: number | null = null;
 
@@ -196,7 +219,7 @@ export default class Editor {
   }
 
   public replaceContent(body: string) {
-    assert(this.isCreated);
+    assert(this.isReady);
     this.core.action(replaceAll(body));
   }
 
@@ -205,12 +228,12 @@ export default class Editor {
     await this.core.destroy(true);
   }
 
-  public get isCreated() {
-    return this.core.status === EditorStatus.Created;
-  }
+  @observable
+  private accessor status: EditorStatus | undefined;
 
-  public onStatusChange(cb: () => void) {
-    this.core.onStatusChange(cb);
+  @computed
+  public get isReady() {
+    return this.status === EditorStatus.Created;
   }
 
   public init() {
@@ -221,7 +244,7 @@ export default class Editor {
   public accessor currentHeadingPosition: number[] | undefined;
 
   private readonly handleScrollend = action(() => {
-    if (!this.isCreated) return;
+    if (!this.isReady) return;
 
     const editorView = this.core.ctx.get(editorViewCtx);
     const rootEl = this.core.ctx.get(rootCtx) as HTMLElement;

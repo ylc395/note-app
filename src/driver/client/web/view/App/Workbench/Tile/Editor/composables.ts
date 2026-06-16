@@ -31,7 +31,7 @@ export function useEditorBody(getMdEditor: () => Editor | undefined) {
       () => editor().content,
       (body) => {
         const mdEditor = getMdEditor();
-        if (mdEditor?.isCreated && typeof body === 'string' && workbench.currentEditor && !editor().isGlobalCurrent) {
+        if (mdEditor?.isReady && typeof body === 'string' && workbench.currentEditor && !editor().isGlobalCurrent) {
           mdEditor.replaceContent(body);
         }
       },

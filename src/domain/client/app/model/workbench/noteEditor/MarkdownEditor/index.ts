@@ -10,6 +10,20 @@ import type { EditorDTO } from '../../BaseEditor/types';
 const uiStateSchema = z.object({
   scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
   cursorPos: z.object({ anchor: z.number(), head: z.number() }).optional().catch(undefined),
+  search: z
+    .object({
+      enabled: z.boolean().optional(),
+      replaceExpanded: z.boolean().optional(),
+      currentMatchIndex: z.number().optional(),
+      search: z.string().optional(),
+      replace: z.string().optional(),
+      caseSensitive: z.boolean().optional(),
+      literal: z.boolean().optional(),
+      regexp: z.boolean().optional(),
+      wholeWord: z.boolean().optional(),
+    })
+    .optional()
+    .catch(undefined),
   outline: z
     .object({
       enabled: z.boolean().catch(true),

@@ -5,6 +5,7 @@ import { action } from 'mobx';
 import { FullscreenIcon, ListIcon, TextSearchIcon } from 'lucide-solid';
 
 import BaseMarkdownEditor from '#web/view/components/MarkdownEditor';
+import type { SearchChangeInfo } from '#web/view/components/MarkdownEditor/search/SearchBar';
 import MarkdownEditor from '#domain/client/app/model/Workbench/noteEditor/MarkdownEditor';
 import type Editor from '#web/view/components/MarkdownEditor/Editor';
 import Button from '#web/view/components/Button';
@@ -34,8 +35,22 @@ export default function MarkdownEditorView() {
     uiState().cursorPos = pos;
   }
 
+  function handleSearchChange(info: SearchChangeInfo) {
+    uiState().search = {
+      ...uiState().search,
+      ...info,
+    };
+  }
+
   const toggleOutline = action(() => {
     uiState().outline.enabled = !uiState().outline.enabled;
+  });
+
+  const toggleSearch = action(() => {
+    uiState().search = {
+      ...uiState().search,
+      enabled: !uiState().search?.enabled,
+    };
   });
 
   const handleOutlineResize = action(({ size }: SplitterResizeDetails) => {
@@ -50,7 +65,7 @@ export default function MarkdownEditorView() {
             <ListIcon />
             大纲
           </Button>
-          <Button size="small">
+          <Button size="small" selected={uiState().search?.enabled} onClick={toggleSearch}>
             <TextSearchIcon />
             查找
           </Button>
@@ -79,12 +94,16 @@ export default function MarkdownEditorView() {
               ref={setEditor}
               className="h-full overflow-auto border-16 border-bg-primary"
               defaultValue={editorModel().content}
+              defaultSearchOptions={uiState().search}
               initialScroll={uiState().scroll}
               initialCursorPos={uiState().cursorPos}
               readonly={editorModel().isUploading}
               onUpdate={updateBody}
               onScrollEnd={action(handleScrollEnd)}
               onSelectionUpdate={action(handleSelectionUpdate)}
+              onSearchChange={action(handleSearchChange)}
+              onSearchClose={toggleSearch}
+              showSearch={uiState().search?.enabled}
             />
           </Splitter.Panel>
         </Splitter.Root>

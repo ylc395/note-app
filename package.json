@@ -129,6 +129,7 @@
     "pdfjs-dist": "^5.5.207",
     "perfect-freehand": "^1.2.2",
     "pica": "^9.0.1",
+    "prosemirror-search": "^1.1.1",
     "prosemirror-virtual-cursor": "^0.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

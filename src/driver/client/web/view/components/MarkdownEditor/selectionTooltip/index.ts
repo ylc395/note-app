@@ -5,6 +5,7 @@ import { $prose } from '@milkdown/kit/utils';
 import { createComponent } from 'solid-js';
 import { render } from 'solid-js/web';
 import { debounce } from 'lodash-es';
+import { getMatchHighlights } from 'prosemirror-search';
 
 import shell from '#web/infra/shell';
 import View from './View';
@@ -38,6 +39,15 @@ export default $prose(
           destroy();
 
           if (view.composing || view.state.selection.empty || !view.editable) {
+            return;
+          }
+
+          // 搜索时匹配出来的选区不应弹出格式化 tooltip
+          if (
+            getMatchHighlights(view.state)
+              .find(view.state.selection.from, view.state.selection.to)
+              .find(({ from, to }) => from === view.state.selection.from && to === view.state.selection.to)
+          ) {
             return;
           }
 
