@@ -27,12 +27,15 @@ export default function SvgItem(props: { value: AnnotationVO[] }) {
   }
 
   return (
-    <div class="border p-2 space-y-2" onClick={jumpTo}>
-      <div class="flex text-sm justify-between">
+    <div
+      class="border border-border-primary bg-surface-raised rounded-md p-3 cursor-pointer hover:bg-bg-hover transition-colors space-y-2"
+      onClick={jumpTo}
+    >
+      <div class="flex text-sm justify-between text-fg-secondary">
         <span>第{page()}页</span>
         <span>共{props.value.length}个标记</span>
       </div>
-      <div class="text-sm text-left">
+      <div class="text-xs text-left text-fg-tertiary">
         <time>最近标记于{dayjs(latestAnnotation().createdAt).format('YYYY年MM月DD日 HH:mm:ss')}</time>
       </div>
     </div>

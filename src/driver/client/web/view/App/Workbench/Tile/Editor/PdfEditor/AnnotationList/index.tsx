@@ -2,16 +2,17 @@ import { createMemo, createSignal, For, Show } from 'solid-js';
 import { LoaderCircleIcon, PinOffIcon } from 'lucide-solid';
 import { useSplitterContext } from '@ark-ui/solid';
 import { partialRight } from 'lodash-es';
+import { cx } from 'class-variance-authority';
+import { action } from 'mobx';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
+import FloatingPanel from '#web/view/components/FloatingPanel';
+import Button from '#web/view/components/Button';
+
 import TextItem from './TextItem';
 import Settings from './Settings';
 import SvgItem from './SvgItem';
 import { useContext } from '../context';
-import FloatingPanel from '#web/view/components/FloatingPanel';
-import { action } from 'mobx';
-import Button from '#web/view/components/Button';
-import { cx } from 'class-variance-authority';
 
 export default function AnnotationList(props: { id: string }) {
   const splitter = useSplitterContext();
@@ -82,47 +83,61 @@ export default function AnnotationList(props: { id: string }) {
       asChild={(injected) => (
         <div
           class={cx(
-            'p-2 border-border-primary flex flex-col bg-surface-raised overflow-auto relative h-full',
-            uiState.isFloating ? 'border' : 'border-l',
+            'flex flex-col bg-surface-raised overflow-auto relative h-full text-fg-primary',
+            uiState.isFloating ? 'border border-border-primary rounded-lg shadow-lg' : 'border-l border-border-primary',
           )}
           {...injected()}
           {...(uiState.isFloating ? null : splitter().getPanelProps({ id: props.id }))}
         >
-          <FloatingPanel.Handler
-            asChild={(props) => (
-              <div {...props()} class="flex justify-between mb-2 sticky top-0">
-                <Show when={items()}>{(items) => <div class="text-sm">共计 {items().length} 个</div>}</Show>
-                <div class="flex">
-                  <Settings />
-                  <Show when={uiState.isFloating}>
-                    <Button size="small" onClick={action(cancelFloating)}>
-                      <PinOffIcon class="mr-1" />
-                    </Button>
+          <div class="sticky top-0 z-10 flex items-center justify-between px-3 py-2.5 bg-surface-raised border-b border-border-secondary">
+            <FloatingPanel.Handler
+              asChild={(props) => (
+                <div {...props()} class="flex-1 flex items-center gap-2 min-w-0">
+                  <Show when={items()}>
+                    {(items) => (
+                      <span class="text-sm font-medium text-fg-secondary truncate">共计 {items().length} 个标注</span>
+                    )}
                   </Show>
                 </div>
-              </div>
-            )}
-          />
-          <Show
-            when={items()}
-            fallback={
-              <div class="flex flex-col grow items-center justify-center">
-                <LoaderCircleIcon class="animate-spin" /> 加载中
-              </div>
-            }
-          >
-            {(items) => (
-              <div>
-                <For each={items()} fallback={<div class="grow flex items-center justify-center">暂无标注</div>}>
-                  {(item) => (
-                    <Show when={Array.isArray(item)} fallback={<TextItem value={item as AnnotationVO} />}>
-                      <SvgItem value={item as AnnotationVO[]} />
-                    </Show>
-                  )}
-                </For>
-              </div>
-            )}
-          </Show>
+              )}
+            />
+            <div class="flex items-center gap-1 shrink-0">
+              <Settings />
+              <Show when={uiState.isFloating}>
+                <Button size="small" onClick={action(cancelFloating)} class="text-fg-secondary hover:text-fg-primary">
+                  <PinOffIcon class="size-4" />
+                </Button>
+              </Show>
+            </div>
+          </div>
+          <div class="flex-1 p-2 overflow-auto">
+            <Show
+              when={viewer.viewer.isReady && items()}
+              fallback={
+                <div class="flex flex-col items-center justify-center h-full gap-3 text-fg-tertiary">
+                  <LoaderCircleIcon class="animate-spin size-6" />
+                  <span class="text-sm">加载中</span>
+                </div>
+              }
+            >
+              {(items) => (
+                <div class="flex flex-col gap-2">
+                  <For
+                    each={items()}
+                    fallback={
+                      <div class="flex items-center justify-center py-12 text-sm text-fg-tertiary">暂无标注</div>
+                    }
+                  >
+                    {(item) => (
+                      <Show when={Array.isArray(item)} fallback={<TextItem value={item as AnnotationVO} />}>
+                        <SvgItem value={item as AnnotationVO[]} />
+                      </Show>
+                    )}
+                  </For>
+                </div>
+              )}
+            </Show>
+          </div>
         </div>
       )}
     />

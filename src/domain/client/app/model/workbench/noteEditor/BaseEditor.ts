@@ -89,7 +89,7 @@ export default abstract class NoteBaseEditor extends BaseEditor<Required<NoteVO>
 
   @computed
   public get toc() {
-    if (!this.content) {
+    if (this.content === undefined) {
       return null;
     }
 

@@ -7,8 +7,8 @@ export default function Settings() {
     <Menu.Root>
       <Menu.Trigger
         asChild={(props) => (
-          <Button square size="small" {...props()}>
-            <SettingsIcon />
+          <Button square size="small" {...props()} class="text-fg-secondary hover:text-fg-primary">
+            <SettingsIcon class="size-4" />
           </Button>
         )}
       ></Menu.Trigger>

@@ -89,7 +89,7 @@ export default function MarkdownEditorView() {
             </Splitter.Panel>
             <Splitter.ResizeTrigger class="w-1 bg-bg-tertiary" id="outline:editor" />
           </Show>
-          <Splitter.Panel id="editor">
+          <Splitter.Panel id="editor" class="relative">
             <BaseMarkdownEditor
               ref={setEditor}
               className="h-full overflow-auto border-16 border-bg-primary"
@@ -105,11 +105,11 @@ export default function MarkdownEditorView() {
               onSearchClose={toggleSearch}
               showSearch={uiState().search?.enabled}
             />
+            <Show when={!editorModel().content}>
+              <Empty />
+            </Show>
           </Splitter.Panel>
         </Splitter.Root>
-        <Show when={!editorModel().content}>
-          <Empty />
-        </Show>
       </div>
     </Show>
   );

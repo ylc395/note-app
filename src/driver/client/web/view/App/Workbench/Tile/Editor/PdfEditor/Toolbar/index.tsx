@@ -1,14 +1,14 @@
 import { ListIcon, NotepadTextIcon, PenLineIcon, TextSearchIcon, TextSelectIcon } from 'lucide-solid';
-import { Switch } from '@ark-ui/solid';
 import assert from 'assert';
 import { action } from 'mobx';
+import { Show } from 'solid-js';
 
 import Button from '#web/view/components/Button';
+import { IS_DEV } from '#domain/shared/infra/env';
+
 import PageSwitcher from './PageSwitcher';
 import Scale from './Scale';
 import { useContext } from '../context';
-import { Show } from 'solid-js';
-import { IS_DEV } from '#domain/shared/infra/env';
 
 export default function Toolbar() {
   const {
@@ -59,18 +59,6 @@ export default function Toolbar() {
         <Scale />
       </div>
       <div class="flex space-x-2">
-        <Switch.Root
-          checked={editor.svgEditor.isEnabled}
-          class="flex"
-          onCheckedChange={() => editor.svgEditor.toggle()}
-        >
-          <Switch.Label>浏览</Switch.Label>
-          <Switch.Control class="w-12 flex bg-bg-tertiary">
-            <Switch.Thumb class="w-6 bg-bg-primary" />
-          </Switch.Control>
-          <Switch.Label>标注</Switch.Label>
-          <Switch.HiddenInput />
-        </Switch.Root>
         <Button
           size="small"
           selected={editor.annotation.uiState.isEnabled}
