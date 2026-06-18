@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import container from '#utils/singletonContainer.js';
 import { token as databaseToken } from '#domain/server/infra/database.js';
+import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import { token as repositoriesToken } from '../repository/index.js';
 import { token as runtimeToken } from '../infra/runtime.js';
 import { token as kvToken } from '../infra/kvDatabase.js';
@@ -9,6 +10,8 @@ import { token as searchEngineToken } from '../infra/searchEngine.js';
 
 export default abstract class BaseService {
   private readonly db = container.resolve(databaseToken);
+
+  private readonly logger = container.resolve(loggerToken);
 
   protected readonly kv = container.resolve(kvToken);
 
@@ -23,16 +26,16 @@ export default abstract class BaseService {
   }
 
   public static transaction<This extends BaseService, Args extends unknown[], Return>(
-    target: (this: This, ...args: Args) => Return,
+    target: (this: This, ...args: Args) => Promise<Return>,
     _: ClassMethodDecoratorContext,
   ) {
-    return function (this: This, ...args: Args) {
-      return this.transaction(() => {
+    return async function (this: This, ...args: Args): Promise<Return> {
+      return this.transaction(async () => {
         try {
-          return Promise.resolve(target.apply(this, args));
-        } catch (e) {
-          console.error(e);
-          throw e;
+          return await target.apply(this, args);
+        } catch (error) {
+          this.logger.error('[transaction] failed:', error);
+          throw error;
         }
       });
     };

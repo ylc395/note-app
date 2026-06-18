@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, onMount, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, XIcon } from 'lucide-solid';
 
 import Button from '#web/view/components/Button';
@@ -106,11 +106,10 @@ export default function SearchBar(props: {
     setMatchInfo(props.editor.searcher.replaceAll());
   }
 
-  function close() {
+  onCleanup(() => {
     props.editor.searcher.clear();
     props.editor.focus();
-    props.onClose?.();
-  }
+  });
 
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'Enter') {
@@ -119,7 +118,7 @@ export default function SearchBar(props: {
     }
 
     if (e.key === 'Escape') {
-      close();
+      props.onClose?.();
     }
   }
 
@@ -180,7 +179,7 @@ export default function SearchBar(props: {
             <ChevronDownIcon class="size-4" />
           </Button>
           <span class="text-xs text-text-tertiary min-w-12 text-right tabular-nums select-none">{matchDisplay()}</span>
-          <Button size="tiny" square onClick={close} title="关闭">
+          <Button size="tiny" square onClick={props.onClose} title="关闭">
             <XIcon class="size-4" />
           </Button>
         </div>

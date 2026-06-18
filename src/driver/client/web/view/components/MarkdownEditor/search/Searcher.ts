@@ -24,13 +24,14 @@ export interface Options {
   literal?: boolean;
   regexp?: boolean;
   wholeWord?: boolean;
+  defaultOpen?: boolean;
 }
 
 export class Searcher {
   constructor(private ctx: Ctx, public options?: Options) {}
 
   public init() {
-    if (this.options) {
+    if (this.options?.defaultOpen) {
       this.search(this.options);
 
       if (typeof this.options.currentMatchIndex === 'number') {

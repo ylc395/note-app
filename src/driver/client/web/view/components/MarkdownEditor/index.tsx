@@ -28,7 +28,7 @@ export default function MarkdownEditor(props: {
     const { defaultValue, onUpdate, onSelectionUpdate } = props;
     const editor = new Editor({
       defaultValue,
-      defaultSearchOptions: props.defaultSearchOptions,
+      defaultSearchOptions: { ...props.defaultSearchOptions, defaultOpen: props.showSearch },
       root: rootRef!,
       readonly: props.readonly,
     });
@@ -51,24 +51,27 @@ export default function MarkdownEditor(props: {
     setEditor(editor);
   });
 
-  createEffect(() => {
-    const editor = getEditor();
+  createEffect(
+    on(
+      () => getEditor()?.isReady,
+      (isReady) => {
+        if (isReady) {
+          if (props.initialScroll) {
+            rootRef!.scrollTo(props.initialScroll.x, props.initialScroll.y);
+          }
 
-    if (editor?.isReady) {
-      if (props.initialScroll) {
-        rootRef!.scrollTo(props.initialScroll.x, props.initialScroll.y);
-      }
-
-      if (props.initialCursorPos) {
-        try {
-          editor.setSelection(props.initialCursorPos);
-          editor.focus();
-        } catch {
-          return;
+          if (props.initialCursorPos) {
+            try {
+              getEditor()!.setSelection(props.initialCursorPos);
+              getEditor()!.focus();
+            } catch {
+              return;
+            }
+          }
         }
-      }
-    }
-  });
+      },
+    ),
+  );
 
   createEffect(() => {
     const editor = getEditor();
