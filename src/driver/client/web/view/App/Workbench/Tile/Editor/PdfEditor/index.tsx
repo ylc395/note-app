@@ -11,7 +11,7 @@ import PdfView from './PdfView';
 import BodyEditor from './BodyEditor';
 import Toolbar from './Toolbar';
 import PDFEditorViewer from './PDFEditorViewer';
-import OutlineList from './OutlineList';
+import OutlineList from './Outline';
 
 import { ContextProvider } from './context';
 import { useContext } from '../composables';
