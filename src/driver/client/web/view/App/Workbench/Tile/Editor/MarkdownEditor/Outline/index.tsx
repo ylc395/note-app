@@ -1,23 +1,24 @@
 import assert from 'assert';
-import { createMemo, For, Show } from 'solid-js';
+import { createMemo, For, onCleanup, Show } from 'solid-js';
 import { Collapsible } from '@ark-ui/solid';
 import { ChevronDownIcon, ChevronRightIcon, HeadingIcon, LoaderCircleIcon } from 'lucide-solid';
+import { isEqual } from 'lodash-es';
+import { cx } from 'class-variance-authority';
 
 import MarkdownEditor from '#domain/client/app/model/Workbench/noteEditor/MarkdownEditor';
 import type { TocItem } from '#domain/client/app/model/Workbench/noteEditor/BaseEditor';
 import type Editor from '#web/view/components/MarkdownEditor/Editor';
 
-import { useContext } from '../composables';
-import { isEqual } from 'lodash-es';
-import { cx } from 'class-variance-authority';
+import { useContext } from '../../composables';
+import OutlineController from './Outline';
 
-function TocNode(props: { item: TocItem; mdEditor: Editor }) {
+function TocNode(props: { item: TocItem; outline: OutlineController }) {
   const hasChildren = createMemo(() => !!props.item.children?.length);
   const indent = createMemo(() => (props.item.depth - 1) * 20);
-  const isCurrent = createMemo(() => isEqual(props.mdEditor.currentHeadingPosition, props.item.position));
+  const isCurrent = createMemo(() => isEqual(props.outline.currentHeadingPosition, props.item.position));
 
   function handleClick() {
-    props.mdEditor.scrollIntoHeading(props.item.position);
+    props.outline.scrollIntoHeading(props.item.position);
   }
 
   return (
@@ -41,7 +42,7 @@ function TocNode(props: { item: TocItem; mdEditor: Editor }) {
             </span>
           </div>
           <Collapsible.Content>
-            <For each={props.item.children}>{(child) => <TocNode item={child} mdEditor={props.mdEditor} />}</For>
+            <For each={props.item.children}>{(child) => <TocNode item={child} outline={props.outline} />}</For>
           </Collapsible.Content>
         </Collapsible.Root>
       </Show>
@@ -54,6 +55,9 @@ export default function Outline(props: { editorViewModel: Editor }) {
 
   assert(editor instanceof MarkdownEditor);
   const isEmpty = createMemo(() => editor.toc?.length === 0);
+
+  const outline = new OutlineController(props.editorViewModel);
+  onCleanup(() => outline.destroy());
 
   return (
     <Show
@@ -75,7 +79,7 @@ export default function Outline(props: { editorViewModel: Editor }) {
             </div>
           }
         >
-          {(item) => <TocNode item={item} mdEditor={props.editorViewModel} />}
+          {(item) => <TocNode item={item} outline={outline} />}
         </For>
       </div>
     </Show>

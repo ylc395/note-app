@@ -22,6 +22,7 @@ export default function MarkdownEditor(props: {
   onSelectionUpdate?: (pos: { anchor: number; head: number }) => void;
 }) {
   let rootRef: HTMLDivElement | undefined;
+  let containerRef: HTMLDivElement | undefined;
   const [getEditor, setEditor] = createSignal<Editor>();
 
   onMount(() => {
@@ -30,6 +31,7 @@ export default function MarkdownEditor(props: {
       defaultValue,
       defaultSearchOptions: { ...props.defaultSearchOptions, defaultOpen: props.showSearch },
       root: rootRef!,
+      container: containerRef!,
       readonly: props.readonly,
     });
 
@@ -101,7 +103,7 @@ export default function MarkdownEditor(props: {
   });
 
   return (
-    <div class={cx('relative', props.className)}>
+    <div class={cx('relative', props.className)} ref={containerRef}>
       <Show when={props.showSearch && getEditor()}>
         <SearchBar editor={getEditor()!} onClose={props.onSearchClose} onSearchChange={props.onSearchChange} />
       </Show>
