@@ -2,7 +2,7 @@ import { createMemo, createSignal, Show } from 'solid-js';
 import { Splitter, type SplitterResizeDetails } from '@ark-ui/solid';
 import assert from 'assert';
 import { action } from 'mobx';
-import { FullscreenIcon, ListIcon, TextSearchIcon } from 'lucide-solid';
+import { ListIcon, TextSearchIcon } from 'lucide-solid';
 
 import BaseMarkdownEditor from '#web/view/components/MarkdownEditor';
 import type { SearchChangeInfo } from '#web/view/components/MarkdownEditor/search/SearchBar';
@@ -16,6 +16,7 @@ import Outline from './Outline';
 
 export default function MarkdownEditorView() {
   const [getEditor, setEditor] = createSignal<Editor>();
+  const [containerRef, setContainerRef] = createSignal<HTMLElement | null>(null);
 
   const editorModel = createMemo(() => {
     const { editor } = useContext()!;
@@ -69,13 +70,10 @@ export default function MarkdownEditorView() {
             <TextSearchIcon />
             查找
           </Button>
-          <Button size="small">
-            <FullscreenIcon />
-            全屏
-          </Button>
         </div>
         <Splitter.Root
-          class="grow flex min-h-0"
+          ref={setContainerRef}
+          class="grow flex min-h-0 relative"
           size={[uiState().outline.size, 100 - uiState().outline.size] as [number, number]}
           onResize={handleOutlineResize}
           panels={[
@@ -84,10 +82,10 @@ export default function MarkdownEditorView() {
           ]}
         >
           <Show when={uiState().outline.enabled && getEditor()}>
-            <Splitter.Panel id="outline">
-              <Outline editorViewModel={getEditor()!} />
-            </Splitter.Panel>
-            <Splitter.ResizeTrigger class="w-1 bg-bg-tertiary" id="outline:editor" />
+            <Outline editorViewModel={getEditor()!} id="outline" floatingBoundary={containerRef} />
+            <Show when={!uiState().outline.isFloating}>
+              <Splitter.ResizeTrigger class="w-1 bg-bg-tertiary" id="outline:editor" />
+            </Show>
           </Show>
           <Splitter.Panel id="editor" class="relative">
             <BaseMarkdownEditor

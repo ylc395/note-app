@@ -47,6 +47,8 @@ function DragDetector(props: { asChild: (props: () => JSX.HTMLAttributes<unknown
     const panelRect = panel.getBoundingClientRect();
     const boundaryRect = boundaryEl.getBoundingClientRect();
 
+    assert(boundaryEl.contains(panel));
+
     const panelStartPos = {
       x: panelRect.left - (boundaryRect?.left ?? 0),
       y: panelRect.top - (boundaryRect?.top ?? 0),
@@ -61,8 +63,6 @@ function DragDetector(props: { asChild: (props: () => JSX.HTMLAttributes<unknown
         const deltaX = moveEvent.clientX - startX;
         const deltaY = moveEvent.clientY - startY;
         const panelRect = panel.getBoundingClientRect();
-
-        console.log(boundaryRect, panelRect);
 
         panelCurrentPos = {
           x: clamp(panelStartPos.x + deltaX, 0, boundaryRect.width - panelRect.width),

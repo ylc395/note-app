@@ -28,6 +28,21 @@ const uiStateSchema = z.object({
     .object({
       enabled: z.boolean().catch(true),
       size: z.number().catch(20),
+      isFloating: z.boolean().optional().catch(undefined),
+      floatingSize: z
+        .object({
+          width: z.number(),
+          height: z.number(),
+        })
+        .optional()
+        .catch(undefined),
+      floatingPos: z
+        .object({
+          x: z.number(),
+          y: z.number(),
+        })
+        .optional()
+        .catch(undefined),
     })
     .catch({ enabled: true, size: 20 }),
 });

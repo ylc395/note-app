@@ -67,12 +67,15 @@ export class Searcher {
 
   public next() {
     const view = this.view;
+    // 这里必须确保焦点在编辑器里，否则无法自动滚动到匹配项
+    view.focus();
     findNext(view.state, view.dispatch);
     return this.getInfo();
   }
 
   public prev() {
     const view = this.view;
+    view.focus();
     findPrev(view.state, view.dispatch);
     return this.getInfo();
   }
@@ -111,6 +114,7 @@ export class Searcher {
 
     const target = matches[index - 1];
     if (!target) return this.getInfo();
+    view.focus();
     const tr = state.tr.setSelection(TextSelection.create(state.doc, target.from, target.to)).scrollIntoView();
     view.dispatch(tr);
 
