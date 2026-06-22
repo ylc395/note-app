@@ -6,7 +6,7 @@ import Entity from '#domain/client/app/model/base/Entity';
 import { parseAppUrl } from '#domain/shared/infra/url';
 import shell from '#web/infra/shell';
 
-import { customCtx } from '../../customCtx';
+import { editorModelCtx } from '../../editorModelCtx';
 
 export function setupLinkJump({
   dom,
@@ -37,7 +37,7 @@ export function setupLinkJump({
       const appUrl = parseAppUrl(mark.attrs.href);
 
       if (appUrl) {
-        ctx.get(customCtx).onJump?.({
+        ctx.get(editorModelCtx).jump?.({
           ...appUrl,
           mimeType: entity.mimeType,
         });

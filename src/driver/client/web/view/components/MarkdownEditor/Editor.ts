@@ -34,7 +34,7 @@ import slashMenu from './slashMenu';
 import cursor from './cursor';
 import selectionHighlight from './selectionHighlight';
 import './index.css';
-import { customCtx, type CustomContext } from './customCtx';
+import { editorModelCtx } from './editorModelCtx';
 import search, { Searcher, type Options as SearcherOptions } from './search';
 
 /** 一些关于 milkdown 的知识
@@ -93,11 +93,7 @@ export default class Editor {
       .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了
       .use(listener)
       .config((ctx) => {
-        ctx.inject(customCtx, {
-          onJump: this.jump.bind(this),
-          containerElement: this.containerEl,
-        });
-
+        ctx.inject(editorModelCtx, this);
         ctx.set(rootCtx, props.root);
         ctx.set(defaultValueCtx, props.defaultValue || '');
         ctx.set(editorViewOptionsCtx, {
@@ -188,7 +184,7 @@ export default class Editor {
     return this.core.create();
   }
 
-  private readonly jump: NonNullable<CustomContext['onJump']> = ({ type, id, mimeType }) => {
+  public readonly jump = ({ type, id, mimeType }: { mimeType?: string | null; id: string; type: RouteTypes }) => {
     const workbench = singletonContainer.resolve(Workbench);
 
     if (type === RouteTypes.Note) {

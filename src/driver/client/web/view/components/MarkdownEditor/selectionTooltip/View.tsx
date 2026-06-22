@@ -50,7 +50,7 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
           return [];
         }
       },
-      contextElement: view.dom,
+      contextElement: view.dom, // 告知 floating-ui 监听哪个元素的可滚动祖先元素
     };
   });
 

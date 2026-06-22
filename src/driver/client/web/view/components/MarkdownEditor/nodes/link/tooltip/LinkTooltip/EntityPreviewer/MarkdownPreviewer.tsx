@@ -4,7 +4,7 @@ import { without } from 'lodash-es';
 import { commonmark, keymap as commonmarkKeymap } from '@milkdown/kit/preset/commonmark';
 import { gfm, keymap as gfmKeymap } from '@milkdown/kit/preset/gfm';
 
-import { customCtx } from '#web/view/components/MarkdownEditor/customCtx';
+import { editorModelCtx } from '#web/view/components/MarkdownEditor/editorModelCtx';
 
 import multimedia from '../../../../multimedia';
 import topic from '../../../../topic';
@@ -27,7 +27,7 @@ export default function MarkdownPreviewer() {
         .use(multimedia)
         .use(topic)
         .config((ctx) => {
-          ctx.inject(customCtx, { onJump: milkdownCtx.get(customCtx).onJump });
+          ctx.inject(editorModelCtx, milkdownCtx.get(editorModelCtx));
           ctx.set(rootCtx, rootRef);
           ctx.set(defaultValueCtx, entity.entity!.value.data!.body);
           ctx.set(editorViewOptionsCtx, { editable: () => false });
