@@ -94,7 +94,7 @@ export default function MarkdownEditorView() {
               defaultValue={editorModel().content}
               defaultSearchOptions={uiState().search}
               initialScroll={uiState().scroll}
-              initialCursorPos={uiState().cursorPos}
+              initialCursorPos={uiState().cursorPos || { anchor: 0, head: 0 }}
               readonly={editorModel().isUploading}
               onUpdate={updateBody}
               onScrollEnd={action(handleScrollEnd)}

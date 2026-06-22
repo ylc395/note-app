@@ -24,16 +24,6 @@ export default function TitleInput() {
   const placeholder = createMemo(() => title() || editor().title || '');
 
   createEffect(() => {
-    if (editor().entity.value.data) {
-      setTitle(editor().entity.value.data!.title);
-    }
-
-    if (!editor().hasEdited && editor().content === '' && editor().title === '') {
-      inputRef?.focus();
-    }
-  });
-
-  createEffect(() => {
     if (editor().entity.value.data && title() !== editor().entity.value.data!.title) {
       editor().update({ title: title() });
     }

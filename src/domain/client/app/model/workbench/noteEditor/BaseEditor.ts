@@ -70,8 +70,6 @@ export default abstract class NoteBaseEditor extends BaseEditor<Required<NoteVO>
 
   protected readonly domainEventBus = container.resolve(DomainEventBus);
 
-  public hasEdited = false;
-
   @computed
   public get title() {
     return this.entity.title || this.options.title;
@@ -127,8 +125,6 @@ export default abstract class NoteBaseEditor extends BaseEditor<Required<NoteVO>
   public readonly update = (patch: Patch) => {
     assert(this.entity.value.data, 'can not update when loading');
     const currentData = pick(this.entity.value.data, ['title', 'body', 'icon', 'type']);
-
-    this.hasEdited = true;
 
     // 这里采用乐观更新
     this.entity.value.setData((note) => ({ ...note!, ...patch }));
