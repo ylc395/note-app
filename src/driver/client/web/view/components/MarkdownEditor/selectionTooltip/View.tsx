@@ -56,7 +56,7 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
 
   const { setTooltipEl } = useTooltip({
     ctx: props.ctx,
-    reference: virtualElement(),
+    reference: virtualElement,
     placement: 'top',
     middleware: [inline(), offset(16)],
     onEscape: props.onClose,

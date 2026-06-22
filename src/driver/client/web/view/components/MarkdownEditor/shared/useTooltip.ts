@@ -14,6 +14,7 @@ import { createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
 import { useMilkdownEvent } from './prosemirrorUtils';
 import { makeEventListener } from '@solid-primitives/event-listener';
+import { customCtx } from '../customCtx';
 
 export function useTooltip(options: {
   ctx: Ctx;
@@ -21,7 +22,6 @@ export function useTooltip(options: {
   reference: VirtualElement | HTMLElement | (() => VirtualElement | HTMLElement) | 'cursor';
   placement?: Placement;
   middleware?: (Middleware | undefined)[];
-  boundary?: HTMLElement;
   hideStrategy?: 'escaped' | 'referenceHidden';
   onCursorChange?: () => void;
   onEscape?: () => void;
@@ -76,7 +76,7 @@ export function useTooltip(options: {
     }
 
     const stopAutoUpdate = autoUpdate(reference(), rootEl, async () => {
-      const boundary = options.boundary ?? (options.ctx.get(rootCtx) as HTMLElement);
+      const boundary = options.ctx.get(customCtx).containerElement ?? (options.ctx.get(rootCtx) as HTMLElement);
       const middleware = [
         hide({ boundary, strategy: options.hideStrategy ?? 'escaped' }),
         flip({ boundary }),

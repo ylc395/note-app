@@ -93,7 +93,10 @@ export default class Editor {
       .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了
       .use(listener)
       .config((ctx) => {
-        ctx.inject(customCtx, { onJump: this.jump.bind(this) });
+        ctx.inject(customCtx, {
+          onJump: this.jump.bind(this),
+          containerElement: this.containerEl,
+        });
 
         ctx.set(rootCtx, props.root);
         ctx.set(defaultValueCtx, props.defaultValue || '');
