@@ -7,7 +7,7 @@ import container from '#utils/singletonContainer';
 import { MimeTypes } from '#domain/shared/model/file';
 
 import BaseEditor from '../BaseEditor';
-import PDFDocumentFactory from '../../../base/PDFDocumentFactory';
+import PDFDocumentFactory, { type PDFDocumentToken } from '../../../base/PDFDocumentFactory';
 import PageTextManager from './PageTextManager';
 import TextFinder from './TextFinder';
 import AnnotationManager from './AnnotationManager';
@@ -43,6 +43,8 @@ export default class PdfEditor extends BaseEditor {
   public override readonly mimeType = MimeTypes.PDF;
 
   @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
+
+  private loadingPdf?: PDFDocumentToken;
 
   @observable public accessor progress: string | undefined;
 
@@ -84,10 +86,21 @@ export default class PdfEditor extends BaseEditor {
   private async init() {
     assert(this.entity.blob.result.data);
 
-    const doc = await this.docFactory.create({
+    this.loadingPdf = this.docFactory.create({
       key: this.entityId,
       blob: this.entity.blob.result.data,
     });
+
+    let doc;
+    try {
+      doc = await this.loadingPdf.doc;
+    } catch (e) {
+      // doc 加载可能因 destroy 调用了 dispose 而被取消，静默忽略
+      if ((e as Error)?.name === 'AbortError') {
+        return;
+      }
+      throw e;
+    }
 
     this.texts.setDoc(doc);
     this.outline.setDoc(doc);
@@ -141,9 +154,7 @@ export default class PdfEditor extends BaseEditor {
   }
 
   public override destroy() {
-    if (this.doc) {
-      this.docFactory.revoke(this.entityId);
-    }
+    this.loadingPdf?.dispose();
 
     this.textFinder.destroy();
     this.texts.destroy();

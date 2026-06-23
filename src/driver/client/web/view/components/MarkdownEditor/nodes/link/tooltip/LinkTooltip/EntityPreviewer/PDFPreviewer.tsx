@@ -1,5 +1,6 @@
 import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
 import { ZoomInIcon, ZoomOutIcon } from 'lucide-solid';
+import { noop } from 'lodash-es';
 
 import Button from '#web/view/components/Button';
 import container from '#utils/singletonContainer';
@@ -16,17 +17,16 @@ export default function PDFPreviewer() {
   let viewRef: HTMLDivElement | undefined;
 
   createEffect(() => {
-    if (!entity?.blob.data || !containerRef || !viewRef) {
+    if (!entity?.blob.data || !entity.value.data || !containerRef || !viewRef) {
       return;
     }
 
-    const id = entity.value.data!.id;
+    const { doc, dispose } = factory.create({
+      key: entity.value.data.id,
+      blob: entity.blob.data,
+    });
 
-    factory
-      .create({
-        key: id,
-        blob: entity.blob.data,
-      })
+    doc
       .then((doc) => {
         const pdfViewer = new PDFViewer();
 
@@ -40,11 +40,10 @@ export default function PDFPreviewer() {
           .then(() => {
             setPdfViewer(pdfViewer);
           });
-      });
+      })
+      .catch(noop); // doc 加载可能因组件卸载（dispose）而被取消，忽略即可
 
-    onCleanup(() => {
-      factory.revoke(id);
-    });
+    onCleanup(dispose);
   });
 
   onCleanup(() => {
