@@ -16,16 +16,16 @@ export default function PDFPreviewer() {
   let viewRef: HTMLDivElement | undefined;
 
   createEffect(() => {
-    if (!entity.entity?.blob.data || !containerRef || !viewRef) {
+    if (!entity?.blob.data || !containerRef || !viewRef) {
       return;
     }
 
-    const id = entity.entity.value.data!.id;
+    const id = entity.value.data!.id;
 
     factory
       .create({
         key: id,
-        blob: entity.entity.blob.data,
+        blob: entity.blob.data,
       })
       .then((doc) => {
         const pdfViewer = new PDFViewer();

@@ -3,8 +3,6 @@ import { editorViewCtx } from '@milkdown/kit/core';
 import type { Mark } from '@milkdown/kit/prose/model';
 
 import Entity from '#domain/client/app/model/base/Entity';
-import { parseAppUrl } from '#domain/shared/infra/url';
-import shell from '#web/infra/shell';
 
 import { editorModelCtx } from '../../editorModelCtx';
 
@@ -21,31 +19,21 @@ export function setupLinkJump({
 }) {
   const abortController = new AbortController();
 
-  function handleClick(e: MouseEvent) {
-    e.preventDefault();
+  dom.addEventListener(
+    'click',
+    (e) => {
+      e.preventDefault();
 
-    if (ctx.get(editorViewCtx).editable) {
-      return;
-    }
-
-    if (!entity) {
-      shell.openNewWindow(mark.attrs.href);
-      return;
-    }
-
-    if (entity.value.isSuccess) {
-      const appUrl = parseAppUrl(mark.attrs.href);
-
-      if (appUrl) {
-        ctx.get(editorModelCtx).jump?.({
-          ...appUrl,
-          mimeType: entity.mimeType,
-        });
+      if (ctx.get(editorViewCtx).editable || (entity && !entity.value.isSuccess)) {
+        return;
       }
-    }
-  }
 
-  dom.addEventListener('click', handleClick, { signal: abortController.signal });
+      if (URL.canParse(mark.attrs.href)) {
+        ctx.get(editorModelCtx).jumpTo?.(mark.attrs.href, entity?.mimeType || undefined);
+      }
+    },
+    { signal: abortController.signal },
+  );
 
   return () => {
     abortController.abort();

@@ -5,12 +5,12 @@ import { Portal } from 'solid-js/web';
 import { Combobox, useListCollection } from '@ark-ui/solid';
 import { noop, pick } from 'lodash-es';
 
-import shell from '#web/infra/shell';
 import container from '#utils/singletonContainer';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 import Entity from '#domain/client/app/model/base/Entity';
 import { SearchResultVO } from '#domain/shared/model/search';
 import { getAppUrl } from '#domain/shared/infra/url';
+import { editorModelCtx } from '#web/view/components/MarkdownEditor/editorModelCtx';
 import Icon from '#web/view/components/Icon';
 
 import { Mode } from './constant';
@@ -27,10 +27,10 @@ export default function LinkInput(props: {
   ref?: HTMLInputElement;
 }) {
   const remote = container.resolve(remoteToken);
-  const { entity } = useContext()!;
+  const { entity, milkdownCtx } = useContext()!;
   const [targetSource, setTargetSource] = createSignal<Entity>();
   const [value, setValue] = createSignal(props.initialValue);
-  const isUnaccessible = createMemo(() => props.mode !== Mode.Preview || entity.entity?.value.isError);
+  const isUnaccessible = createMemo(() => props.mode !== Mode.Preview || !entity?.value.isSuccess);
 
   const { collection, clear, set } = useListCollection<Item>({
     initialItems: [],
@@ -38,16 +38,14 @@ export default function LinkInput(props: {
     itemToValue: (item) => item.id,
   });
 
+  const editor = milkdownCtx.get(editorModelCtx);
+
   function handleUrlClick() {
     if (isUnaccessible()) {
       return;
     }
 
-    if (entity.jump) {
-      entity.jump();
-    } else {
-      shell.openNewWindow(props.initialValue);
-    }
+    editor.jumpTo?.(props.initialValue, entity!.mimeType || undefined);
   }
 
   createEffect(() => {
@@ -65,7 +63,7 @@ export default function LinkInput(props: {
 
       // 如果是 url 的形式：若是 app url 则请求下相应的资源；否则无视
       if (URL.canParse(value)) {
-        const { entity } = makeEntity({ url: value });
+        const entity = makeEntity(value);
 
         if (entity) {
           setTargetSource(entity);
@@ -115,7 +113,7 @@ export default function LinkInput(props: {
       onClick={handleUrlClick}
     >
       <Show
-        when={entity.entity?.path.isSuccess && props.mode === Mode.Preview}
+        when={entity?.path.isSuccess && props.mode === Mode.Preview}
         fallback={
           <Combobox.Root
             collection={collection()}
@@ -170,10 +168,10 @@ export default function LinkInput(props: {
         }
       >
         <div class="text-fg-primary truncate">
-          {[...entity.entity!.path.data!, { title: entity.entity?.title }].map((p) => p.title).join('/')}
+          {[...entity!.path.data!, { title: entity?.title }].map((p) => p.title).join('/')}
         </div>
       </Show>
-      <Show when={props.mode === Mode.Preview && !entity.entity?.value.isError && !entity.entity?.path.isError}>
+      <Show when={props.mode === Mode.Preview && !entity?.value.isError && !entity?.path.isError}>
         <SquareArrowOutUpRightIcon class="size-4 text-fg-secondary shrink-0" />
       </Show>
     </div>

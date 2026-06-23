@@ -19,6 +19,7 @@ export default function MarkdownEditor(props: {
   initialScroll?: { x: number; y: number };
   initialCursorPos?: { anchor: number; head: number };
   onUpdate?: (md: string) => void;
+  onJump?: (url: string, mimeType?: string) => void;
   onSelectionUpdate?: (pos: { anchor: number; head: number }) => void;
 }) {
   let rootRef: HTMLDivElement | undefined;
@@ -33,6 +34,7 @@ export default function MarkdownEditor(props: {
       root: rootRef!,
       container: containerRef!,
       readonly: props.readonly,
+      jumpTo: props.onJump,
     });
 
     if (onUpdate) {
@@ -59,7 +61,7 @@ export default function MarkdownEditor(props: {
       (isReady) => {
         if (isReady) {
           if (props.initialScroll) {
-            rootRef!.scrollTo(props.initialScroll.x, props.initialScroll.y);
+            containerRef!.scrollTo(props.initialScroll.x, props.initialScroll.y);
           }
 
           if (props.initialCursorPos) {
@@ -103,18 +105,15 @@ export default function MarkdownEditor(props: {
   });
 
   return (
-    <div class={cx('relative', props.className)} ref={containerRef}>
+    <div
+      class={cx('relative', props.className)}
+      ref={containerRef}
+      onScrollEnd={props.onScrollEnd && ((e) => props.onScrollEnd?.({ x: e.target.scrollLeft, y: e.target.scrollTop }))}
+    >
       <Show when={props.showSearch && getEditor()}>
         <SearchBar editor={getEditor()!} onClose={props.onSearchClose} onSearchChange={props.onSearchChange} />
       </Show>
-      <div
-        class="select-text"
-        spellcheck={false}
-        ref={rootRef}
-        onScrollEnd={
-          props.onScrollEnd && (() => props.onScrollEnd?.({ x: rootRef!.scrollLeft, y: rootRef!.scrollTop }))
-        }
-      ></div>
+      <div class="select-text" spellcheck={false} ref={rootRef}></div>
     </div>
   );
 }

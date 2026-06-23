@@ -61,10 +61,7 @@ export default function Tooltip(props: {
 
   let inputRef: HTMLInputElement | undefined;
 
-  const entity = makeEntity({
-    url: initialUrl,
-    ctx: props.ctx,
-  });
+  const entity = makeEntity(initialUrl);
 
   const { setTooltipEl } = useTooltip({
     reference: props.targetDom || 'cursor',
@@ -148,7 +145,7 @@ export default function Tooltip(props: {
         onMouseLeave={props.onMouseLeave}
         onMouseEnter={props.onMouseEnter}
       >
-        <Show when={entity.entity && mode() === Mode.Preview}>
+        <Show when={entity && mode() === Mode.Preview}>
           <EntityPreviewer onFixedChange={props.onFixedChange} />
         </Show>
         <LinkInput mode={mode()} ref={inputRef} initialValue={initialUrl} onInput={setUrl} onSelect={handleSelect} />

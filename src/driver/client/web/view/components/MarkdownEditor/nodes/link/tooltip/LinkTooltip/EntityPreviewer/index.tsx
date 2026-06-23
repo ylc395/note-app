@@ -12,10 +12,7 @@ export default function EntityPreviewer(props: {
   onFixedChange?: (isFixed: boolean) => void;
 }) {
   const [isFixed, setIsFixed] = createSignal(props.isInitialFixed || false);
-
-  const {
-    entity: { entity },
-  } = useContext()!;
+  const { entity } = useContext()!;
 
   createEffect(on(isFixed, (value) => props.onFixedChange?.(value)));
 

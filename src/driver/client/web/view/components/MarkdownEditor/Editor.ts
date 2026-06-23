@@ -16,10 +16,6 @@ import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import assert from 'assert';
 import { action, computed, observable } from 'mobx';
-import singletonContainer from '#utils/singletonContainer';
-import Workbench from '#domain/client/app/model/Workbench';
-import { RouteTypes } from '#domain/shared/infra/url';
-import { EntityTypes } from '#domain/shared/model/entity';
 
 import multimedia from './nodes/multimedia';
 import link from './nodes/link';
@@ -69,8 +65,10 @@ export default class Editor {
     container: HTMLElement;
     defaultValue?: string;
     defaultSearchOptions?: SearcherOptions;
+    jumpTo?: (uru: string, mimeType?: string) => void;
   }) {
     this.containerEl = props.container;
+    this.jumpTo = props.jumpTo;
 
     this.core = MilkdownEditor.make()
       .use(without(commonmark, ...commonmarkKeymap)) // 不要引入快捷键。我们自己定制
@@ -184,15 +182,5 @@ export default class Editor {
     return this.core.create();
   }
 
-  public readonly jump = ({ type, id, mimeType }: { mimeType?: string | null; id: string; type: RouteTypes }) => {
-    const workbench = singletonContainer.resolve(Workbench);
-
-    if (type === RouteTypes.Note) {
-      workbench.open({
-        entityId: id,
-        entityType: EntityTypes.Note,
-        mimeType: mimeType || null,
-      });
-    }
-  };
+  public readonly jumpTo;
 }

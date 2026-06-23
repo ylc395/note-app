@@ -9,6 +9,10 @@ import type { SearchChangeInfo } from '#web/view/components/MarkdownEditor/searc
 import MarkdownEditor from '#domain/client/app/model/Workbench/noteEditor/MarkdownEditor';
 import type Editor from '#web/view/components/MarkdownEditor/Editor';
 import Button from '#web/view/components/Button';
+import container from '#utils/singletonContainer';
+import Workbench from '#domain/client/app/model/Workbench';
+import { parseAppUrl, toEntityType } from '#domain/shared/infra/url';
+import shell from '#web/infra/shell';
 
 import { useContext, useEditorBody } from '../composables';
 import Empty from './Empty';
@@ -17,6 +21,7 @@ import Outline from './Outline';
 export default function MarkdownEditorView() {
   const [getEditor, setEditor] = createSignal<Editor>();
   const [containerRef, setContainerRef] = createSignal<HTMLElement | null>(null);
+  const workbench = container.resolve(Workbench);
 
   const editorModel = createMemo(() => {
     const { editor } = useContext()!;
@@ -34,6 +39,24 @@ export default function MarkdownEditorView() {
 
   function handleSelectionUpdate(pos: { anchor: number; head: number }) {
     uiState().cursorPos = pos;
+  }
+
+  function handleJump(url: string, mimeType?: string) {
+    const appUrl = parseAppUrl(url);
+
+    if (appUrl) {
+      const entityType = toEntityType(appUrl.type);
+
+      if (entityType) {
+        workbench.open({
+          entityId: appUrl.id,
+          entityType,
+          mimeType: mimeType || null,
+        });
+      }
+    } else {
+      shell.openNewWindow(url);
+    }
   }
 
   function handleSearchChange(info: SearchChangeInfo) {
@@ -102,6 +125,7 @@ export default function MarkdownEditorView() {
               onSearchChange={action(handleSearchChange)}
               onSearchClose={toggleSearch}
               showSearch={uiState().search?.enabled}
+              onJump={handleJump}
             />
             <Show when={!editorModel().content}>
               <Empty />
