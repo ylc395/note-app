@@ -1,5 +1,14 @@
 import { Ctx } from '@milkdown/kit/ctx';
-import { BoldIcon, ItalicIcon, StrikethroughIcon, CodeIcon, LinkIcon, Link2OffIcon } from 'lucide-solid';
+import {
+  BoldIcon,
+  ItalicIcon,
+  StrikethroughIcon,
+  CodeIcon,
+  LinkIcon,
+  Link2OffIcon,
+  CopyIcon,
+  CheckIcon,
+} from 'lucide-solid';
 import {
   toggleEmphasisCommand,
   toggleInlineCodeCommand,
@@ -22,12 +31,14 @@ import shell from '#web/infra/shell';
 import LinkView, { Mode } from '../nodes/link/tooltip/LinkTooltip';
 import Button from '../../Button';
 import { useTooltip } from '../shared/useTooltip';
+import { useCopyAsMarkdown } from './useCopyAsMarkdown';
 
 export default function View(props: { ctx: Ctx; onClose: () => void }) {
   const editor = createMemo(() => props.ctx.get(editorCtx));
   const editorView = createMemo(() => props.ctx.get(editorViewCtx));
 
   const [menu, setMenu] = createSignal<'main' | 'link'>('main');
+  const { copied, copyAsMarkdown } = useCopyAsMarkdown(props.ctx);
 
   const virtualElement = createMemo(() => {
     const view = props.ctx.get(editorViewCtx);
@@ -111,6 +122,12 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
                 <Link2OffIcon />
               </Button>
             </Show>
+            <div class="mx-0.5 h-5 w-px bg-border-primary" />
+            <Button square onClick={copyAsMarkdown}>
+              <Show when={copied()} fallback={<CopyIcon />}>
+                <CheckIcon />
+              </Show>
+            </Button>
           </div>
         </div>
       </Show>
