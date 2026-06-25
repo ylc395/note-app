@@ -38,7 +38,7 @@ function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string;
   };
 
   return (
-    <div class="mt-2 w-full" onClick={() => open(target)}>
+    <div class="py-2" onClick={() => open(target)}>
       <div class="flex justify-between mb-2 text-fg-tertiary">
         <div>关联文件</div>
         <div>第 {props.record.location.page} 页</div>
@@ -76,6 +76,10 @@ export default function Item(props: { open?: boolean; row: SearchResultVO; onTog
     return { first, rest };
   });
 
+  const bodyPreview = createMemo(() =>
+    props.row.matches[SearchFields.Body] ? highlight(props.row.matches[SearchFields.Body]) : props.row.bodyPreview,
+  );
+
   const collapsible = useCollapsible({
     defaultOpen: true,
     onOpenChange: (e) => props.onToggle(e.open),
@@ -90,7 +94,7 @@ export default function Item(props: { open?: boolean; row: SearchResultVO; onTog
   return (
     <Collapsible.RootProvider class="text-sm mb-2 group" value={collapsible}>
       <div
-        class="flex space-x-2 items-center"
+        class="flex items-center mb-2"
         onClick={() =>
           open({
             entityType: EntityTypes.Note,
@@ -99,20 +103,22 @@ export default function Item(props: { open?: boolean; row: SearchResultVO; onTog
           })
         }
       >
-        <Collapsible.Trigger onClick={(e) => e.stopPropagation()}>
-          <ChevronRightIcon class="group-data-[state=open]:rotate-90" />
+        <Collapsible.Trigger class="mr-2" onClick={(e) => e.stopPropagation()}>
+          <ChevronRightIcon class="size-4 group-data-[state=open]:rotate-90" />
         </Collapsible.Trigger>
         <div class="shrink-0">
           {props.row.matches[SearchFields.Title] ? highlight(props.row.matches[SearchFields.Title]) : props.row.title}
         </div>
-        <div class="whitespace-pre text-xs text-fg-tertiary">/{props.row.path.map(({ title }) => title).join('/')}</div>
+        <Show when={props.row.path.length > 1}>
+          <div class="whitespace-pre text-xs text-fg-tertiary">
+            /{props.row.path.map(({ title }) => title).join('/')}
+          </div>
+        </Show>
       </div>
-      <Collapsible.Content class="pl-4">
-        <p class="text-fg-secondary">
-          {(props.row.matches[SearchFields.Body]
-            ? highlight(props.row.matches[SearchFields.Body])
-            : props.row.bodyPreview) || '无内容'}
-        </p>
+      <Collapsible.Content class="pl-6 space-y-2">
+        <Show when={bodyPreview()}>
+          <p class="text-fg-secondary">{bodyPreview()}</p>
+        </Show>
         <Show when={props.row.matches[SearchFields.Annotation]}>
           {(records) => (
             <For each={records()}>
@@ -133,13 +139,13 @@ export default function Item(props: { open?: boolean; row: SearchResultVO; onTog
         </Show>
         <Show when={fileTextMatches().rest.length > 0}>
           <Collapsible.Root unmountOnExit lazyMount>
-            <Collapsible.Trigger class="flex items-center mt-2 w-full">
-              <Collapsible.Indicator class="group/others">
-                <ChevronRightIcon class='group-data-[state="open"]/others:rotate-90' />
+            <Collapsible.Trigger class="flex items-center w-full mb-2">
+              <Collapsible.Indicator class="group/others mr-1">
+                <ChevronRightIcon class='size-4 group-data-[state="open"]/others:rotate-90' />
               </Collapsible.Indicator>
               其它{fileTextMatches().rest.length}页
             </Collapsible.Trigger>
-            <Collapsible.Content class="pl-2">
+            <Collapsible.Content class="pl-2 divide-border-accent-subtle divide-y">
               <For each={fileTextMatches().rest}>
                 {(record) => (
                   <FileMatchRecordView record={record} entityId={props.row.id} mimeType={props.row.file!.mimeType} />

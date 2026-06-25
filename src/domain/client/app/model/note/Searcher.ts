@@ -25,10 +25,7 @@ export default class Searcher {
   @action
   public readonly setKeyword = (v: string) => {
     this.keyword = v;
-
-    if (!v) {
-      this.result = undefined;
-    }
+    this.result = undefined;
   };
 
   @action
@@ -36,32 +33,36 @@ export default class Searcher {
     this.root = v;
   };
 
-  public readonly search = withAbortSignal(async (signal, immediate?: boolean) => {
-    if (!this.keyword) {
-      return;
-    }
+  private readonly debouncedSearch = debounce(
+    withAbortSignal(async (signal) => {
+      if (!this.keyword) {
+        return;
+      }
 
-    if (immediate) {
-      this.debouncedSearch.cancel();
-    }
+      runInAction(() => {
+        this.result = undefined;
+      });
 
-    runInAction(() => {
-      this.result = undefined;
-    });
+      try {
+        const result = await this.remote.search.search.mutate(
+          {
+            entityTypes: [EntityTypes.Note],
+            keyword: this.keyword,
+            rootId: this.root ? arrayOf(this.root) : undefined,
+          },
+          { signal },
+        );
+        runInAction(() => {
+          this.result = result;
+        });
+      } catch (error) {
+        if (signal.aborted) {
+          return;
+        }
 
-    const result = await this.remote.search.search.mutate(
-      {
-        entityTypes: [EntityTypes.Note],
-        keyword: this.keyword,
-        rootId: this.root ? arrayOf(this.root) : undefined,
-      },
-      { signal },
-    );
-
-    runInAction(() => {
-      this.result = result;
-    });
-  });
-
-  private readonly debouncedSearch = debounce(this.search.bind(this, false), 500);
+        throw error;
+      }
+    }),
+    500,
+  );
 }

@@ -7,6 +7,11 @@ export enum SidebarTabs {
   Project = 'project',
 }
 
+export enum NoteTabs {
+  All = 'all',
+  SearchResult = 'searchResult',
+}
+
 const schema = {
   explorer: z.object({
     type: z.enum(SidebarTabs).catch(SidebarTabs.Note),
@@ -14,6 +19,11 @@ const schema = {
       .number()
       .array()
       .catch(() => [20, 80]),
+    noteExplorer: z
+      .object({
+        tab: z.enum(NoteTabs).optional().catch(NoteTabs.All),
+      })
+      .catch(() => ({})),
   }),
 };
 
