@@ -1,12 +1,12 @@
 import assert from 'node:assert';
 
 import { getHash, toArrayBuffer } from '#utils/file.js';
+import { generateId } from '#domain/server/infra/id.js';
 import { type FileVO, type FileDTO, type NewFileTextRecord } from '#domain/server/model/file.js';
 import { token as downloaderToken } from '#domain/server/infra/downloader.js';
 import container from '#utils/singletonContainer.js';
 
 import BaseService from '../BaseService.js';
-import EntityService from '../EntityService.js';
 import JobQueue from './textExtractor/JobQueue.js';
 
 export default class FileService extends BaseService {
@@ -36,7 +36,7 @@ export default class FileService extends BaseService {
     const textExtractor = JobQueue.getExtractor(params);
 
     const fileVO = await this.repo.files.create({
-      id: EntityService.generateId(),
+      id: generateId(),
       ...params,
       hash,
       size: file.data.byteLength,

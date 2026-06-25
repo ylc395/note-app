@@ -5,6 +5,8 @@ import { keyBy } from 'lodash-es';
 import type { Revision, RevisionPatchDTO } from '#domain/shared/model/revision.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
 import container from '#utils/singletonContainer.js';
+import { generateId } from '#domain/server/infra/id.js';
+import { transactional } from '#domain/server/infra/transaction.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
@@ -30,7 +32,7 @@ export default class RevisionService extends BaseService {
     }
   }
 
-  @BaseService.transaction
+  @transactional
   private async autoCreateRevisions() {
     assert(this.interval);
 
@@ -82,7 +84,7 @@ export default class RevisionService extends BaseService {
 
       newRevisions.push({
         entityId: id,
-        id: BaseService.generateId(),
+        id: generateId(),
         createdAt: thisTime,
         titleDiff: titleUpdated ? createPatch('', oldText.title, entity.title) : null,
         bodyDiff: bodyUpdated ? createPatch('', oldText.body, body) : null,
@@ -99,7 +101,7 @@ export default class RevisionService extends BaseService {
     this.isBusy = false;
   }
 
-  @BaseService.transaction
+  @transactional
   public async update(id: Revision['id'], patch: RevisionPatchDTO) {
     const revision = await this.repo.revisions.findAll({ ids: [id], isAvailableOnly: true });
     assert(revision.length > 0, 'invalid revision id');
@@ -114,7 +116,7 @@ export default class RevisionService extends BaseService {
     await this.repo.revisions.batchCreate([
       {
         entityId,
-        id: BaseService.generateId(),
+        id: generateId(),
         createdAt: time,
         titleDiff: typeof latest.title === 'string' ? createPatch('', oldText.title, latest.title) : null,
         bodyDiff: typeof latest.body === 'string' ? createPatch('', oldText.body, latest.body) : null,

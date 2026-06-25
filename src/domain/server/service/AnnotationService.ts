@@ -3,10 +3,11 @@ import assert from 'node:assert';
 import type { Annotation, AnnotationDTO, AnnotationPatchDTO } from '#domain/shared/model/annotation.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
 import container from '#utils/singletonContainer.js';
+import { generateId } from '#domain/server/infra/id.js';
+import { transactional } from '#domain/server/infra/transaction.js';
 
 import BaseService from './BaseService.js';
 import NoteService from './NoteService.js';
-import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
 import RevisionService from './RevisionService.js';
 
@@ -17,14 +18,14 @@ export default class AnnotationService extends BaseService {
 
   private readonly revision = container.resolve(RevisionService);
 
-  @BaseService.transaction
+  @transactional
   public async create(annotation: AnnotationDTO) {
     // only notes have annotations
     await this.noteService.assertAvailableIds([annotation.parentId], { withFile: true });
 
     const now = Date.now();
     const created = await this.repo.annotations.create({
-      id: EntityService.generateId(),
+      id: generateId(),
       parentId: annotation.parentId,
       body: annotation.body || '',
       selector: annotation.selector,
@@ -39,13 +40,11 @@ export default class AnnotationService extends BaseService {
     return created;
   }
 
-  @BaseService.transaction
   public async queryByEntityId(entityId: EntityId) {
     await this.noteService.assertAvailableIds([entityId]);
     return this.repo.annotations.findAllByEntityId(entityId, { isAvailableOnly: true });
   }
 
-  @BaseService.transaction
   public async queryOne(annotationId: EntityId) {
     const annotation = await this.repo.annotations.findOneById(annotationId, { isAvailableOnly: true });
     assert(annotation, 'invalid annotation id');
@@ -53,7 +52,7 @@ export default class AnnotationService extends BaseService {
     return annotation;
   }
 
-  @BaseService.transaction
+  @transactional
   public async updateOne(id: Annotation['id'], patch: AnnotationPatchDTO) {
     const updatedAt = typeof patch.body === 'string' ? Date.now() : undefined;
 

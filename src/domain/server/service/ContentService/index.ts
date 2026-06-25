@@ -18,6 +18,7 @@ import {
 import type { TopicQuery, TopicVO } from '#domain/shared/model/topic.js';
 import { arrayOf, type MaybeArray } from '#utils/collection.js';
 import { parseMarkdown } from '#domain/shared/infra/markdown/parse.js';
+import { withTransaction } from '#domain/server/infra/transaction.js';
 
 import BaseService from '../BaseService.js';
 import EntityService from '../EntityService.js';
@@ -37,7 +38,7 @@ export default class ContentService extends BaseService {
 
     try {
       visit(mdAst, (node) => extractors.forEach((extractor) => extractor.visit(node)));
-      await this.transaction(async () => {
+      await withTransaction(async () => {
         for (const extractor of extractors) {
           await extractor.done();
         }

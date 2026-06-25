@@ -12,12 +12,13 @@ import {
   type NewNoteDTO,
 } from '#domain/server/model/note.js';
 import { arrayOf } from '#utils/collection.js';
+import { generateId } from '#domain/server/infra/id.js';
 import container from '#utils/singletonContainer.js';
 import { EntityTypes } from '#domain/shared/model/entity.js';
 import { SearchFields } from '#domain/shared/model/search.js';
+import { transactional } from '#domain/server/infra/transaction.js';
 
 import BaseService from './BaseService.js';
-import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
 import FileService from './FileService/index.js';
 import type { FileDTO, FileVO } from '../model/file.js';
@@ -27,7 +28,7 @@ export default class NoteService extends BaseService {
 
   private readonly file = container.resolve(FileService);
 
-  @BaseService.transaction
+  @transactional
   public async create(note: NoteDTO) {
     let newNote: NewNote;
 
@@ -50,7 +51,7 @@ export default class NoteService extends BaseService {
       const now = Date.now();
 
       newNote = await this.repo.notes.create({
-        id: EntityService.generateId(),
+        id: generateId(),
         title: note.title || '',
         parentId: note.parentId || null,
         body: note.body || '',
@@ -78,13 +79,13 @@ export default class NoteService extends BaseService {
     return await this.repo.notes.create({
       ...pick(targetNote, ['body', 'icon', 'parentId', 'sourceUrl', 'fileId']),
       title: targetNote.title ? `${targetNote.title}-副本` : `${normalizeTitle(targetNote)}-副本`,
-      id: EntityService.generateId(),
+      id: generateId(),
       updatedAt: now,
       createdAt: now,
     });
   }
 
-  @BaseService.transaction
+  @transactional
   public async updateOne(noteId: Note['id'], notePatch: NotePatchDTO) {
     await this.assertValidDto(notePatch, [noteId]);
 
@@ -116,7 +117,7 @@ export default class NoteService extends BaseService {
     return Array.isArray(notes) ? result : result[0]!;
   }
 
-  @BaseService.transaction
+  @transactional
   public async batchUpdate(ids: Note['id'][], patch: NotePatchDTO) {
     await this.assertValidDto(patch, ids);
     const result = await this.repo.notes.update(ids, patch);
@@ -169,7 +170,7 @@ export default class NoteService extends BaseService {
     return this.repo.notes.findAllCustomIcons();
   }
 
-  @BaseService.transaction
+  @transactional
   public async setFile(noteId: Note['id'], file: FileDTO) {
     const note = await this.repo.notes.findOneById(noteId);
     assert(note && !note.fileId);

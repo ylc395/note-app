@@ -4,6 +4,7 @@ import assert from 'node:assert';
 import container from '#utils/singletonContainer.js';
 import { RecyclablesDTO, RecyclableVO } from '#domain/server/model/recyclable.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
+import { transactional } from '#domain/server/infra/transaction.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
@@ -11,7 +12,7 @@ import EntityService from './EntityService.js';
 export default class RecyclableService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 
-  @BaseService.transaction
+  @transactional
   public async batchCreate(recyclables: RecyclablesDTO) {
     const entityIds = recyclables.map(({ entityId }) => entityId);
     await this.entityService.assertAvailableIds(entityIds);
@@ -34,7 +35,7 @@ export default class RecyclableService extends BaseService {
     await this.repo.recyclables.batchCreate(newRecyclables);
   }
 
-  @BaseService.transaction
+  @transactional
   public async recover(entityId: EntityId) {
     const recyclable = await this.repo.recyclables.findOneByEntityId(entityId);
     assert(recyclable, `invalid entity id: ${entityId}`);
@@ -47,7 +48,6 @@ export default class RecyclableService extends BaseService {
     await this.repo.recyclables.removeByEntityId(entityId);
   }
 
-  @BaseService.transaction
   public async queryAll(): Promise<RecyclableVO[]> {
     const records = await this.repo.recyclables.findAll();
     const ids = records.map(({ entityId }) => entityId);

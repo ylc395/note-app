@@ -3,13 +3,14 @@ import assert from 'node:assert';
 import dayjs from 'dayjs';
 
 import { arrayOf } from '#utils/collection.js';
+import { generateId } from '#domain/server/infra/id.js';
 import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '#domain/server/model/memo.js';
 import container from '#utils/singletonContainer.js';
 import { EntityTypes } from '#domain/shared/model/entity.js';
 import { SearchFields } from '#domain/shared/model/search.js';
+import { transactional } from '#domain/server/infra/transaction.js';
 
 import BaseService from './BaseService.js';
-import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
 import type { LinkVO } from '../model/content.js';
 import RevisionService from './RevisionService.js';
@@ -19,7 +20,7 @@ export default class MemoService extends BaseService {
 
   private readonly revision = container.resolve(RevisionService);
 
-  @BaseService.transaction
+  @transactional
   public async create(memo: MemoDTO) {
     if (memo.parentId) {
       await this.assertAvailableId(memo.parentId, { isTop: true });
@@ -27,7 +28,7 @@ export default class MemoService extends BaseService {
 
     const now = Date.now();
     const newMemo = await this.repo.memos.create({
-      id: EntityService.generateId(),
+      id: generateId(),
       updatedAt: now,
       createdAt: now,
       parentId: memo.parentId || null,
@@ -42,7 +43,7 @@ export default class MemoService extends BaseService {
     return this.toVO(newMemo, true);
   }
 
-  @BaseService.transaction
+  @transactional
   public async updateOne(id: MemoVO['id'], patch: MemoPatchDTO) {
     await this.assertAvailableId(id);
     const bodyUpdated = typeof patch.body === 'string';
@@ -60,7 +61,6 @@ export default class MemoService extends BaseService {
     }
   }
 
-  @BaseService.transaction
   public async queryList(query: ClientMemoQuery) {
     assert(!(query.keyword && query.limit), 'can not set limit / isPinned with keyword');
 
@@ -134,7 +134,6 @@ export default class MemoService extends BaseService {
     return await this.toVO(memos);
   }
 
-  @BaseService.transaction
   public async queryAvailableDates(duration: Duration) {
     const memos = await this.repo.memos.findAll({
       ...duration,

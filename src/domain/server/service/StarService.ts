@@ -4,6 +4,7 @@ import container from '#utils/singletonContainer.js';
 import type { Star, StarDTO, StarVO } from '#domain/shared/model/star.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
 import { arrayOf } from '#utils/collection.js';
+import { transactional } from '#domain/server/infra/transaction.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
@@ -11,7 +12,7 @@ import EntityService from './EntityService.js';
 export default class StarService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 
-  @BaseService.transaction
+  @transactional
   public async create({ entityId }: StarDTO) {
     await this.entityService.assertAvailableIds([entityId]);
 
@@ -24,7 +25,6 @@ export default class StarService extends BaseService {
     return created;
   }
 
-  @BaseService.transaction
   public async query() {
     const stars = await this.repo.stars.findAll({ isAvailableOnly: true });
 
@@ -60,7 +60,7 @@ export default class StarService extends BaseService {
     return Array.isArray(stars) ? result : result[0]!;
   }
 
-  @BaseService.transaction
+  @transactional
   public async remove(entityId: EntityId) {
     const star = await this.repo.stars.findOneByEntityId(entityId);
     assert(star, `star ${entityId} not exist`);
