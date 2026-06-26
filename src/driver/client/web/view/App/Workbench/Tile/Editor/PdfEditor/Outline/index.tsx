@@ -6,11 +6,14 @@ import { useSplitterContext } from '@ark-ui/solid';
 import { partialRight } from 'lodash-es';
 import { cx } from 'class-variance-authority';
 
+import Button from '#web/view/components/Button';
+import FloatingPanel from '#web/view/components/FloatingPanel';
+
 import Item from './Item';
 import OutlineViewModel from './Outline';
 import { useContext } from '../context';
-import Button from '#web/view/components/Button';
-import FloatingPanel from '#web/view/components/FloatingPanel';
+import panelStyles from '../../shared/panel.module.css';
+import PanelHeader from '../../shared/Header';
 
 export default function Outline(props: { id: string }) {
   const { viewer } = useContext()!;
@@ -95,40 +98,33 @@ export default function Outline(props: { id: string }) {
       asChild={(injected) => (
         <div
           class={cx(
-            'overflow-auto border-border-primary flex flex-col bg-surface-raised relative h-full',
+            panelStyles.shell,
+            'overflow-auto border-border-primary',
             uiState.isFloating ? 'border' : 'border-r',
           )}
           {...injected()}
           {...(uiState.isFloating ? null : splitter().getPanelProps({ id: props.id }))}
         >
-          <FloatingPanel.Handler
-            asChild={(props) => (
-              <div {...props()} class="top-0 bg-bg-secondary flex items-center">
-                <h4>大纲</h4>
-                <div class="flex items-center justify-end grow">
-                  <Button size="small" onClick={scrollToFocused}>
-                    <EyeIcon class="mr-1" />
-                    当前浏览
-                  </Button>
-                  <Show when={uiState.isFloating}>
-                    <Button size="small" onClick={action(cancelFloating)}>
-                      <PinOffIcon class="mr-1" />
-                      取消悬浮
-                    </Button>
-                  </Show>
-                </div>
-              </div>
-            )}
-          />
+          <PanelHeader title="大纲">
+            <Button size="small" onClick={scrollToFocused}>
+              <EyeIcon class="mr-1" />
+              当前浏览
+            </Button>
+            <Show when={uiState.isFloating}>
+              <Button square size="small" onClick={action(cancelFloating)}>
+                <PinOffIcon class="mr-1" />
+              </Button>
+            </Show>
+          </PanelHeader>
           <Show
             when={!outline.model.items || outline.model.items.length > 0}
             fallback={<div class="flex h-full justify-center items-center">无大纲</div>}
           >
-            <div class="grow p-4 overflow-auto" ref={setListRef} onScrollEnd={action(handleScroll)}>
+            <div class={panelStyles.body} ref={setListRef} onScrollEnd={action(handleScroll)}>
               <For
                 each={outline.model.items}
                 fallback={
-                  <div class="flex h-full justify-center items-center">
+                  <div class={panelStyles.loading}>
                     <LoaderCircleIcon class="animate-spin" />
                     <span>加载中</span>
                   </div>

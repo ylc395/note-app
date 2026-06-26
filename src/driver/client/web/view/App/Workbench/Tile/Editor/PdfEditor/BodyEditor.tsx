@@ -7,10 +7,12 @@ import { cx } from 'class-variance-authority';
 
 import FloatingPanel from '#web/view/components/FloatingPanel';
 import MarkdownEditor from '#web/view/components/MarkdownEditor';
+import panelStyles from '../shared/panel.module.css';
 import type Editor from '#web/view/components/MarkdownEditor/Editor';
 import Button from '#web/view/components/Button';
 import { useContext } from './context';
 import { useEditorBody } from '../composables';
+import PanelHeader from '../shared/Header';
 
 export default function BodyEditor(props: { id: string }) {
   const { viewer } = useContext()!;
@@ -65,27 +67,20 @@ export default function BodyEditor(props: { id: string }) {
       asChild={(injected) => (
         <div
           class={cx(
-            'p-2 border-border-primary flex flex-col overflow-auto bg-surface-raised h-full',
+            panelStyles.shell,
+            'overflow-auto border-border-primary',
             uiState.isFloating ? 'border' : 'border-r',
           )}
           {...injected()}
           {...(!editor.body.uiState.isFloating ? splitter().getPanelProps({ id: props.id }) : null)}
         >
-          <FloatingPanel.Handler
-            asChild={(props) => (
-              <div {...props()} class="flex justify-between items-center">
-                <h4>笔记</h4>
-                <div>
-                  <Show when={uiState.isFloating}>
-                    <Button size="small" onClick={action(cancelFloating)}>
-                      <PinOffIcon class="mr-1" />
-                      取消悬浮
-                    </Button>
-                  </Show>
-                </div>
-              </div>
-            )}
-          />
+          <PanelHeader title="笔记">
+            <Show when={uiState.isFloating}>
+              <Button square size="small" onClick={action(cancelFloating)}>
+                <PinOffIcon class="mr-1" />
+              </Button>
+            </Show>
+          </PanelHeader>
           <Show when={editor.entity.value.data}>
             {(note) => (
               <MarkdownEditor

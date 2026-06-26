@@ -1,0 +1,13 @@
+@reference "#web/view/styles/theme.css";
+
+.shell {
+  @apply flex flex-col bg-surface-raised relative h-full;
+}
+
+.body {
+  @apply grow overflow-auto p-2;
+}
+
+.loading {
+  @apply flex h-full justify-center items-center;
+}

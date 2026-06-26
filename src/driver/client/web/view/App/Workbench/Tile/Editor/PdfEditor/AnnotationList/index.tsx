@@ -8,6 +8,7 @@ import { action } from 'mobx';
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import FloatingPanel from '#web/view/components/FloatingPanel';
 import Button from '#web/view/components/Button';
+import panelStyles from '../../shared/panel.module.css';
 
 import TextItem from './TextItem';
 import Settings from './Settings';
@@ -83,7 +84,8 @@ export default function AnnotationList(props: { id: string }) {
       asChild={(injected) => (
         <div
           class={cx(
-            'flex flex-col bg-surface-raised overflow-auto relative h-full text-fg-primary',
+            panelStyles.shell,
+            'overflow-auto text-fg-primary',
             uiState.isFloating ? 'border border-border-primary rounded-lg shadow-lg' : 'border-l border-border-primary',
           )}
           {...injected()}
@@ -114,7 +116,7 @@ export default function AnnotationList(props: { id: string }) {
             <Show
               when={viewer.viewer.isReady && items()}
               fallback={
-                <div class="flex flex-col items-center justify-center h-full gap-3 text-fg-tertiary">
+                <div class={cx(panelStyles.loading, 'flex-col gap-3 text-fg-tertiary')}>
                   <LoaderCircleIcon class="animate-spin size-6" />
                   <span class="text-sm">加载中</span>
                 </div>

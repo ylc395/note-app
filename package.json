@@ -4,6 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "type": "module",
+  "imports": {
+    "#web/*": "./src/driver/client/web/*"
+  },
   "scripts": {
     "dev:electron": "node script/dev/electron/index.js",
     "dev:zod": "zodify --out-dir ./src/domain/shared/infra/apiSchema --pattern ^src/domain/shared/model --tag api --import-with-ext",

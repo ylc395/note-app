@@ -14,6 +14,9 @@ import Button from '#web/view/components/Button';
 
 import { useContext } from '../../composables';
 import OutlineController from './Outline';
+import panelStyles from '../../shared/panel.module.css';
+import outlineStyles from '../../shared/outline.module.css';
+import PanelHeader from '../../shared/Header';
 
 function TocNode(props: { item: TocItem; outline: OutlineController }) {
   const hasChildren = createMemo(() => !!props.item.children?.length);
@@ -25,22 +28,22 @@ function TocNode(props: { item: TocItem; outline: OutlineController }) {
   }
 
   return (
-    <div style={{ 'padding-left': `${indent()}px` }}>
+    <div class={outlineStyles.node} style={{ 'padding-left': `${indent()}px` }}>
       <Show
         when={hasChildren()}
         fallback={
-          <span onClick={handleClick} class={cx('pl-4 cursor-pointer', isCurrent() && 'font-semibold')}>
+          <span onClick={handleClick} class={cx(outlineStyles.nodeLeaf, isCurrent() && outlineStyles.nodeActive)}>
             {props.item.text}
           </span>
         }
       >
         <Collapsible.Root defaultOpen={true} lazyMount unmountOnExit>
-          <div class="flex mb-1 cursor-pointer">
-            <Collapsible.Trigger class="group flex items-center">
+          <div class={outlineStyles.nodeParent}>
+            <Collapsible.Trigger class={cx('group', outlineStyles.nodeTrigger)}>
               <ChevronRightIcon class='group-data-[state="open"]:hidden w-4' />
               <ChevronDownIcon class='group-data-[state="closed"]:hidden w-4' />
             </Collapsible.Trigger>
-            <span onClick={handleClick} class={cx(isCurrent() && 'font-semibold')}>
+            <span onClick={handleClick} class={cx(isCurrent() && outlineStyles.nodeActive)}>
               {props.item.text}
             </span>
           </div>
@@ -103,28 +106,17 @@ export default function Outline(props: {
       boundaryEl={props.floatingBoundary}
       asChild={(injected) => (
         <div
-          class={cx(
-            'border-border-primary flex flex-col bg-surface-raised relative h-full',
-            uiState.isFloating ? 'border' : 'border-r',
-          )}
+          class={cx(panelStyles.shell, 'border-border-primary', uiState.isFloating ? 'border' : 'border-r')}
           {...injected()}
           {...(uiState.isFloating ? null : splitter().getPanelProps({ id: props.id }))}
         >
-          <FloatingPanel.Handler
-            asChild={(handlerProps) => (
-              <div {...handlerProps()} class="top-0 bg-bg-secondary flex items-center px-2 py-1">
-                <h4 class="text-sm font-medium">大纲</h4>
-                <div class="flex items-center justify-end grow">
-                  <Show when={uiState.isFloating}>
-                    <Button size="small" onClick={action(cancelFloating)}>
-                      <PinOffIcon class="mr-1" />
-                      取消悬浮
-                    </Button>
-                  </Show>
-                </div>
-              </div>
-            )}
-          />
+          <PanelHeader title="大纲">
+            <Show when={uiState.isFloating}>
+              <Button square size="small" onClick={action(cancelFloating)}>
+                <PinOffIcon class="mr-1" />
+              </Button>
+            </Show>
+          </PanelHeader>
           <Show
             when={!isEmpty()}
             fallback={
@@ -134,11 +126,11 @@ export default function Outline(props: {
               </div>
             }
           >
-            <div class="h-full overflow-auto p-1">
+            <div class={panelStyles.body}>
               <For
                 each={editor.toc}
                 fallback={
-                  <div class="flex h-full justify-center items-center">
+                  <div class={panelStyles.loading}>
                     <LoaderCircleIcon class="animate-spin" />
                     <span>加载中</span>
                   </div>

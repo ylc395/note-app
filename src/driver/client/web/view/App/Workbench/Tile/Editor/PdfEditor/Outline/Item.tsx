@@ -1,9 +1,14 @@
 import { Collapsible, Tooltip } from '@ark-ui/solid';
 import { ChevronRightIcon, ChevronDownIcon } from 'lucide-solid';
 import { createMemo, For, Show } from 'solid-js';
+import { cx } from 'class-variance-authority';
+import { Portal } from 'solid-js/web';
 
+import shell from '#web/infra/shell/index.js';
 import type { OutlineItem } from '#domain/client/app/model/Workbench/noteEditor/PdfEditor';
+
 import type Outline from './Outline';
+import outlineStyles from '../../shared/outline.module.css';
 
 function Title(props: { item: OutlineItem; outline: Outline; isFocused: boolean; class?: string }) {
   const annotationCount = createMemo(() => props.outline.model.getAnnotationCount(props.item.key));
@@ -19,15 +24,14 @@ function Title(props: { item: OutlineItem; outline: Outline; isFocused: boolean;
 
   return (
     <>
-      <Tooltip.Root positioning={{ placement: 'right' }}>
+      <Tooltip.Root positioning={{ placement: 'right', flip: false }}>
         <Tooltip.Trigger
           asChild={(childProps) => (
             <span
               {...childProps}
               data-outline-item-key={props.item.key}
               onClick={handleClick}
-              class={props.class}
-              classList={{ 'font-bold': props.isFocused }}
+              class={cx(props.class, props.isFocused && outlineStyles.nodeActive)}
             >
               {props.item.title}
             </span>
@@ -35,11 +39,13 @@ function Title(props: { item: OutlineItem; outline: Outline; isFocused: boolean;
         />
         <Show when={pageRange}>
           {(value) => (
-            <Tooltip.Positioner class="bg-bg-tertiary">
-              <Tooltip.Content>
-                {value()[0]} - {value()[1]}
-              </Tooltip.Content>
-            </Tooltip.Positioner>
+            <Portal mount={shell.appRoot}>
+              <Tooltip.Positioner class="bg-bg-tertiary">
+                <Tooltip.Content>
+                  {value()[0]} - {value()[1]}
+                </Tooltip.Content>
+              </Tooltip.Positioner>
+            </Portal>
           )}
         </Show>
       </Tooltip.Root>
@@ -61,11 +67,11 @@ export default function Item(props: {
   });
 
   return (
-    <div classList={{ 'mb-1': props.item.children.length === 0 }} style={{ 'padding-left': `${props.level * 20}px` }}>
+    <div class={outlineStyles.node} style={{ 'padding-left': `${props.level * 20}px` }}>
       <Show
         when={props.item.children.length > 0}
         fallback={
-          <Title isFocused={isFocused()} outline={props.outline} item={props.item} class="pl-4 cursor-pointer" />
+          <Title isFocused={isFocused()} outline={props.outline} item={props.item} class={outlineStyles.nodeLeaf} />
         }
       >
         <Collapsible.Root
@@ -74,8 +80,8 @@ export default function Item(props: {
           unmountOnExit
           onOpenChange={({ open }) => props.onToggle({ key: props.item.key, value: open })}
         >
-          <div class="flex mb-1 cursor-pointer">
-            <Collapsible.Trigger class="group flex items-center">
+          <div class={outlineStyles.nodeParent}>
+            <Collapsible.Trigger class={cx('group', outlineStyles.nodeTrigger)}>
               <ChevronRightIcon class='group-data-[state="open"]:hidden w-4' />
               <ChevronDownIcon class='group-data-[state="closed"]:hidden w-4' />
             </Collapsible.Trigger>

@@ -1,0 +1,21 @@
+@reference "#web/view/styles/theme.css";
+
+.node {
+  @apply mb-1;
+}
+
+.nodeParent {
+  @apply flex mb-1 cursor-pointer;
+}
+
+.nodeLeaf {
+  @apply pl-4 cursor-pointer;
+}
+
+.nodeActive {
+  @apply font-semibold;
+}
+
+.nodeTrigger {
+  @apply flex items-center;
+}
