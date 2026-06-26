@@ -6,8 +6,22 @@ import { Show } from 'solid-js';
 
 export default function SearchBox() {
   const searcher = container.resolve(Searcher);
+  let isComposing = false;
 
-  function handleSearchInput(e: Event) {
+  function handleCompositionStart() {
+    isComposing = true;
+  }
+
+  function handleCompositionEnd(e: CompositionEvent) {
+    isComposing = false;
+    searcher.setKeyword((e.target as HTMLInputElement).value);
+  }
+
+  function handleSearchInput(e: InputEvent) {
+    if (isComposing) {
+      return;
+    }
+
     const keyword = (e.target as HTMLInputElement).value;
     searcher.setKeyword(keyword);
   }
@@ -20,6 +34,8 @@ export default function SearchBox() {
         class="block py-1.5 text-sm grow text-fg-primary placeholder:text-fg-tertiary border border-transparent "
         value={searcher.keyword}
         onInput={handleSearchInput}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
       />
       <Show when={searcher.keyword}>
         <Button square size="tiny" class="shrink-0" onClick={() => searcher.setKeyword('')}>
