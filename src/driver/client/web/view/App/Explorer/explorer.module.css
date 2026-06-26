@@ -1,0 +1,5 @@
+@reference "#web/view/styles/theme.css";
+
+.explorer {
+  @apply border-r border-r-border-primary h-full flex flex-col p-3 bg-bg-secondary;
+}

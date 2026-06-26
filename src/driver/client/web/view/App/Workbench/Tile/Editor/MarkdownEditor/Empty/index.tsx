@@ -35,8 +35,6 @@ export default function Empty() {
     return !mode() || mode() === v;
   }
 
-  const buttonContainerClassName = 'pointer-events-auto border-border-primary border rounded-2xl size-60';
-
   return (
     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-fg-tertiary">
       <Show when={mode() === null}>
@@ -44,10 +42,10 @@ export default function Empty() {
       </Show>
       <div class="flex space-x-12">
         <Show when={shouldShow(Mode.Local)}>
-          <LocalFileUploader className={buttonContainerClassName} />
+          <LocalFileUploader />
         </Show>
         <Show when={shouldShow(Mode.Remote)}>
-          <RemoteFileUploader className={buttonContainerClassName} />
+          <RemoteFileUploader />
         </Show>
       </div>
     </div>

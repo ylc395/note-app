@@ -11,8 +11,9 @@ import Header from '../Header';
 import SearchResult from './SearchResult';
 import UIState, { NoteTabs } from '../../UIState';
 import SearchBox from './SearchBox';
+import styles from '../explorer.module.css';
 
-export default function NoteExplorer(props: { className: string }) {
+export default function NoteExplorer() {
   const searcher = container.resolve(Searcher);
   const uiState = container.resolve(UIState);
 
@@ -28,7 +29,7 @@ export default function NoteExplorer(props: { className: string }) {
   );
 
   return (
-    <div class={props.className}>
+    <div class={styles.explorer}>
       <Header title="笔记">
         <DropArea />
       </Header>

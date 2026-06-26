@@ -9,9 +9,9 @@ export default function DownloadingProgress(props: { downloader: Downloader }) {
   );
 
   return (
-    <div>
-      <span>{props.downloader.metadata.result.data?.mimeType || '-'}</span>
-      <span>
+    <div class="flex flex-col items-center gap-1 text-xs">
+      <span class="text-fg-tertiary">{props.downloader.metadata.result.data?.mimeType || '-'}</span>
+      <span class="text-fg-secondary">
         已下载 {progress() ? `${progress()}%` : props.downloader.loadedSize}
         <Show when={props.downloader.metadata.result.data?.size}>{(size) => `（共${size()}）`}</Show>
       </span>

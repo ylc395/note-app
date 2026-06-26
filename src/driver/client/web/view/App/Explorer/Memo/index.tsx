@@ -6,8 +6,9 @@ import MemoList from '#domain/client/app/model/memo/List';
 import Main from './Main';
 import SearchBox from './SearchBox';
 import Header from '../Header';
+import styles from '../explorer.module.css';
 
-export default function MemoExplorer(props: { className: string }) {
+export default function MemoExplorer() {
   const memoList = container.resolve(MemoList);
   memoList.setActive(true);
 
@@ -16,7 +17,7 @@ export default function MemoExplorer(props: { className: string }) {
   });
 
   return (
-    <div class={props.className}>
+    <div class={styles.explorer}>
       <Header title="Memo" />
       <SearchBox />
       <Main />

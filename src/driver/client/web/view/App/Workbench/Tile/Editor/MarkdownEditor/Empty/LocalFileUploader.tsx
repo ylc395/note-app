@@ -1,19 +1,30 @@
 import { FileUpload, type UseFileUploadContext } from '@ark-ui/solid';
-import { FileIcon, HardDriveUploadIcon } from 'lucide-solid';
+import { HardDriveUploadIcon } from 'lucide-solid';
 import { createMemo, For, Show } from 'solid-js';
 import assert from 'assert';
+import { cx } from 'class-variance-authority';
 
 import MarkdownEditor from '#domain/client/app/model/Workbench/noteEditor/MarkdownEditor';
 import { normalizeTitle } from '#domain/shared/model/note';
-import { useContext } from '../../composables';
+import Button from '#web/view/components/Button';
+import Icon from '#web/view/components/Icon.jsx';
+import singletonContainer from '#utils/singletonContainer';
+import Workbench from '#domain/client/app/model/Workbench';
+import { EntityTypes } from '#domain/shared/model/entity';
 
-export default function LocalFileUploader(props: { className?: string }) {
+import { useContext } from '../../composables';
+import styles from './uploader.module.css';
+export default function LocalFileUploader() {
+  const workbench = singletonContainer.resolve(Workbench);
   const editor = createMemo(() => {
     const { editor } = useContext()!;
     assert(editor instanceof MarkdownEditor);
 
     return editor;
   });
+
+  const firstDuplicatedNote = createMemo(() => editor().resourceManager?.duplicatedNotes?.[0]);
+  const duplicatedCount = createMemo(() => editor().resourceManager?.duplicatedNotes?.length ?? 0);
 
   async function handleFileChange(file: File) {
     editor().resourceManager?.setFile(
@@ -36,62 +47,70 @@ export default function LocalFileUploader(props: { className?: string }) {
 
   return (
     <FileUpload.Root
-      class={props.className}
+      class={styles.container}
       onFileChange={({ acceptedFiles: [file] }) => file && handleFileChange(file)}
     >
       <Show
         when={editor().resourceManager?.file}
         fallback={
-          <FileUpload.Dropzone class="text-sm w-full h-full flex flex-col items-center justify-center cursor-pointer">
+          <FileUpload.Dropzone class={cx(styles.trigger, 'data-[dragging]:bg-bg-accent-subtle')}>
             <FileUpload.Trigger class="cursor-pointer flex items-center justify-center flex-col">
-              <HardDriveUploadIcon class="size-10 mb-4 stroke-1" />
-              <p>上传本地资源</p>
-              <p>可拖拽至此</p>
+              <HardDriveUploadIcon class={styles.triggerIcon} />
+              <p class={styles.triggerTitle}>加载本地资源</p>
+              <p class={styles.triggerSubtitle}>可拖拽至此</p>
             </FileUpload.Trigger>
           </FileUpload.Dropzone>
         }
       >
         <FileUpload.Context>
           {(ctx) => (
-            <>
-              <FileUpload.ItemGroup class="text-sm">
+            <div class={styles.content}>
+              <FileUpload.ItemGroup class="text-sm flex flex-col items-center">
                 <For each={ctx().acceptedFiles}>
                   {(item) => (
-                    <FileUpload.Item file={item}>
-                      <FileUpload.ItemPreview class="mb-4">
-                        <FileIcon class="mx-auto w-10 h-10 stroke-1" />
+                    <FileUpload.Item file={item} class="flex flex-col items-center">
+                      <FileUpload.ItemPreview class="mb-3 text-fg-tertiary">
+                        <Icon mimeType={item.type} />
                       </FileUpload.ItemPreview>
-                      <div class="flex items-center justify-center space-x-2">
-                        <div class="flex items-center">
-                          <FileUpload.ItemName
-                            title={item.name}
-                            class="max-w-42 whitespace-nowrap overflow-hidden text-ellipsis"
-                          />
-                          <FileUpload.ItemSizeText class="text-fg-tertiary" />
-                        </div>
+                      <div class="flex items-center">
+                        <FileUpload.ItemName
+                          title={item.name}
+                          class="max-w-42 whitespace-nowrap overflow-hidden text-ellipsis text-fg-secondary"
+                        />
+                        <FileUpload.ItemSizeText class="text-fg-tertiary text-xs shrink-0" />
                       </div>
                     </FileUpload.Item>
                   )}
                 </For>
               </FileUpload.ItemGroup>
-              <Show when={editor().resourceManager?.duplicatedNotes}>
-                {(notes) => (
-                  <>
-                    <p>
+              <Show when={firstDuplicatedNote()}>
+                {(note) => (
+                  <div class="text-xs text-fg-secondary leading-relaxed">
+                    <p class="mb-2">
                       该资源已经存在于
-                      <a>{normalizeTitle(notes()![0]!)}</a>
-                      {notes().length > 1 && `等${notes().length}个笔记`}
-                      中。
+                      <a
+                        onClick={() =>
+                          workbench.open({
+                            entityType: EntityTypes.Note,
+                            entityId: note().id,
+                            mimeType: note().mimeType,
+                          })
+                        }
+                        class="text-fg-link hover:text-fg-link-hover underline-offset-2 hover:underline cursor-pointer mx-1"
+                      >
+                        {normalizeTitle(note())}
+                      </a>
+                      {duplicatedCount() > 1 && `等${duplicatedCount()}个笔记`}中
                     </p>
-                    <p>是否仍然创建？</p>
-                    <div>
-                      <button onClick={() => editor().resourceManager?.upload()}>继续创建</button>
-                      <button onClick={() => cancel(ctx)}>取消</button>
+                    <p class="mt-1">是否仍然创建？</p>
+                    <div class={styles.actions}>
+                      <Button onClick={() => cancel(ctx)}>取消</Button>
+                      <Button onClick={() => editor().resourceManager?.upload()}>继续创建</Button>
                     </div>
-                  </>
+                  </div>
                 )}
               </Show>
-            </>
+            </div>
           )}
         </FileUpload.Context>
       </Show>

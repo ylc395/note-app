@@ -2,13 +2,15 @@ import { createMemo, Show } from 'solid-js';
 import assert from 'assert';
 
 import MarkdownEditor from '#domain/client/app/model/Workbench/noteEditor/MarkdownEditor';
+import Button from '#web/view/components/Button';
+import { GlobeIcon } from 'lucide-solid';
+
+import { useContext } from '../../../composables';
+import styles from '../uploader.module.css';
 import UrlInput from './UrlInput';
 import DownloadingProgress from './DownloadingProgress';
 
-import { useContext } from '../../../composables';
-import { GlobeIcon } from 'lucide-solid';
-
-export default function RemoteFileUploader(props: { className?: string }) {
+export default function RemoteFileUploader() {
   const editor = createMemo(() => {
     const { editor } = useContext()!;
     assert(editor instanceof MarkdownEditor);
@@ -24,30 +26,31 @@ export default function RemoteFileUploader(props: { className?: string }) {
   }
 
   return (
-    <div class={props.className}>
-      <button
-        class="w-full h-full cursor-pointer text-sm flex items-center justify-center flex-col"
-        onClick={initDownloader}
+    <div class={styles.container}>
+      <Show
+        when={editor().resourceManager?.downloader}
+        fallback={
+          <button class={styles.trigger} onClick={initDownloader}>
+            <GlobeIcon class={styles.triggerIcon} />
+            <p class={styles.triggerTitle}>加载在线资源</p>
+          </button>
+        }
       >
-        <GlobeIcon class="size-10 mb-4 stroke-1" />
-        <p>上传在线资源</p>
-      </button>
-      <Show when={editor().resourceManager?.downloader}>
         {(downloader) => (
-          <>
+          <div class={styles.content}>
             <Show when={downloader().download.isPending} fallback={<UrlInput remoteUploader={downloader()} />}>
               <DownloadingProgress downloader={downloader()} />
             </Show>
-            <div>
-              <button
+            <div class={styles.actions}>
+              <Button onClick={() => editor().resourceManager?.clearDownloader()}>取消</Button>
+              <Button
                 disabled={!downloader().isValidUrl || downloader().download.isPending || downloader().isChecking}
                 onClick={() => downloader().download.mutate()}
               >
                 {downloader().download.isPending ? '下载中...' : '下载'}
-              </button>
-              <button onClick={() => editor().resourceManager?.clearDownloader()}>取消</button>
+              </Button>
             </div>
-          </>
+          </div>
         )}
       </Show>
     </div>

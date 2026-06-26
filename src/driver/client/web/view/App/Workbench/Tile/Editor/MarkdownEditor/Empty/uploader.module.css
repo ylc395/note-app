@@ -1,0 +1,32 @@
+@reference "#web/view/styles/theme.css";
+
+/* 上传器外层卡片：固定尺寸、边框、圆角，并恢复鼠标交互（父级 overlay 禁用了 pointer-events） */
+.container {
+  @apply pointer-events-auto border border-border-primary rounded-2xl size-60;
+}
+
+.trigger {
+  @apply w-full h-full cursor-pointer flex flex-col items-center justify-center text-sm transition-colors duration-150 hover:bg-bg-hover rounded-2xl;
+}
+
+.triggerIcon {
+  @apply size-10 mb-4 stroke-1 text-fg-tertiary;
+}
+
+.triggerTitle {
+  @apply text-fg-secondary;
+}
+
+.triggerSubtitle {
+  @apply text-fg-tertiary text-xs mt-1;
+}
+
+/* 已加载 / 已初始化的内容容器 */
+.content {
+  @apply w-full h-full flex flex-col items-center justify-center gap-3 p-4 text-center;
+}
+
+/* 操作按钮行 */
+.actions {
+  @apply flex items-center justify-center gap-2 mt-6;
+}

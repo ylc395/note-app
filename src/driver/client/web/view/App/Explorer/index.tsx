@@ -10,7 +10,6 @@ import { ContextProvider } from './Note/context';
 
 export default function Explorer(props: { panelId: string }) {
   const uiState = container.resolve(UIState);
-  const explorerClassName = 'border-r border-r-border-primary h-full flex flex-col p-3 bg-bg-secondary';
 
   const noteTreeExplorer = new TreeExplorer();
 
@@ -19,11 +18,11 @@ export default function Explorer(props: { panelId: string }) {
       <Switch>
         <Match when={uiState.explorer.type === SidebarTabs.Note}>
           <ContextProvider treeExplorer={noteTreeExplorer}>
-            <NoteExplorer className={explorerClassName} />
+            <NoteExplorer />
           </ContextProvider>
         </Match>
         <Match when={uiState.explorer.type === SidebarTabs.Memo}>
-          <MemoExplorer className={explorerClassName} />
+          <MemoExplorer />
         </Match>
       </Switch>
     </Splitter.Panel>
