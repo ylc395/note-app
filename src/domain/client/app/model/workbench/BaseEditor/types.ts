@@ -8,5 +8,9 @@ export interface EditorDTO<T = unknown> extends EditorOptions<T> {
   entityType: EntityTypes;
 }
 
+export type EditorFocus = {
+  page: number;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Factory<T = any> = (editor: EditorDTO<T>, tile: Tile) => Editor<T>;

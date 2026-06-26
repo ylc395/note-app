@@ -91,7 +91,9 @@ export default class TileDropTarget implements DropTarget {
       for (const { id, mimeType } of arrayOf(note)) {
         this.workbench.open(
           { entityId: id, mimeType, entityType: EntityTypes.Note },
-          newTileDirection === 'middle' ? this.tile : { splitDirection: newTileDirection, from: this.tile },
+          {
+            dest: newTileDirection === 'middle' ? this.tile : { splitDirection: newTileDirection, from: this.tile },
+          },
         );
       }
     }

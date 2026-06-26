@@ -38,7 +38,14 @@ function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string;
   };
 
   return (
-    <div class="py-2" onClick={() => open(target)}>
+    <div
+      class="py-2"
+      onClick={() =>
+        open(target, {
+          focus: props.record.location.page ? { page: props.record.location.page } : undefined,
+        })
+      }
+    >
       <div class="flex justify-between mb-2 text-fg-tertiary">
         <div>关联文件</div>
         <div>第 {props.record.location.page} 页</div>
@@ -57,7 +64,17 @@ function AnnotationMatchRecordView(props: { record: AnnotationMatchRecord; mimeT
   };
 
   return (
-    <div class="mt-2" onClick={() => open(target)}>
+    <div
+      class="mt-2"
+      onClick={() =>
+        open(target, {
+          focus:
+            props.record.selector.type === 'PDFTextPositionSelector'
+              ? { page: props.record.selector.position.startPage }
+              : undefined,
+        })
+      }
+    >
       <div class="flex justify-between mb-2 text-fg-tertiary">
         <div>标注</div>
         <Show when={props.record.selector.type === 'PDFTextPositionSelector'}>
@@ -70,7 +87,6 @@ function AnnotationMatchRecordView(props: { record: AnnotationMatchRecord; mimeT
 }
 
 export default function Item(props: { open?: boolean; row: SearchResultVO; onToggle: (value: boolean) => void }) {
-  const { open } = container.resolve(Workbench);
   const fileTextMatches = createMemo(() => {
     const [first, ...rest] = props.row.matches[SearchFields.File] || [];
     return { first, rest };
@@ -92,20 +108,12 @@ export default function Item(props: { open?: boolean; row: SearchResultVO; onTog
   });
 
   return (
-    <Collapsible.RootProvider class="text-sm mb-2 group" value={collapsible}>
-      <div
-        class="flex items-center mb-2"
-        onClick={() =>
-          open({
-            entityType: EntityTypes.Note,
-            entityId: props.row.id,
-            mimeType: props.row.file?.mimeType || null,
-          })
-        }
+    <Collapsible.RootProvider class="text-sm mb-2 group relative" value={collapsible}>
+      <Collapsible.Trigger
+        class="flex w-full pb-2 items-center sticky top-0 bg-bg-secondary"
+        onClick={(e) => e.stopPropagation()}
       >
-        <Collapsible.Trigger class="mr-2" onClick={(e) => e.stopPropagation()}>
-          <ChevronRightIcon class="size-4 group-data-[state=open]:rotate-90" />
-        </Collapsible.Trigger>
+        <ChevronRightIcon class="size-4 group-data-[state=open]:rotate-90 mr-1" />
         <div class="shrink-0">
           {props.row.matches[SearchFields.Title] ? highlight(props.row.matches[SearchFields.Title]) : props.row.title}
         </div>
@@ -114,7 +122,7 @@ export default function Item(props: { open?: boolean; row: SearchResultVO; onTog
             /{props.row.path.map(({ title }) => title).join('/')}
           </div>
         </Show>
-      </div>
+      </Collapsible.Trigger>
       <Collapsible.Content class="pl-6 space-y-2">
         <Show when={bodyPreview()}>
           <p class="text-fg-secondary">{bodyPreview()}</p>

@@ -8,7 +8,7 @@ import type { EntityId, EntityTypes } from '#domain/shared/model/entity';
 import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 import EditorFactory from './EditorFactory';
-import type { EditorDTO } from './BaseEditor/types';
+import type { EditorDTO, EditorFocus } from './BaseEditor/types';
 import HistoryStack from '../base/HistoryStack';
 import RecentManager from './RecentManager';
 import UIState from './UIState';
@@ -220,7 +220,10 @@ export default class Workbench {
   // 在指定位置打开一个 editor。该 editor 可能是新建的，也可能是复用已存在的
   // 若已存在，则其会被移动到指定位置（若有指定）
   @action.bound
-  public open(note: EditorDTO, dest?: Editor | Tile | NewTile) {
+  public open(entity: EditorDTO, options?: { dest?: Editor | Tile | NewTile; focus?: EditorFocus }) {
+    let dest = options?.dest;
+    const focus = options?.focus;
+
     const currentTile = this.currentEditor?.tile || this.latestTile;
     dest = dest || currentTile;
 
@@ -237,7 +240,7 @@ export default class Workbench {
     // 打开到指定 tile，或是指定 editor 旁边
     if (dest instanceof Tile || dest instanceof Editor) {
       destTile = dest instanceof Tile ? dest : dest.tile;
-      const existedEditor = destTile.findEditor(note.entityId);
+      const existedEditor = destTile.findEditor(entity.entityId);
 
       // 对应 editor 已存在：
       if (existedEditor) {
@@ -248,17 +251,21 @@ export default class Workbench {
         }
       } else {
         // 对应的 editor 不存在，则新建
-        editor = destTile.createAndAddEditor(note, dest instanceof Editor ? dest : undefined);
+        editor = destTile.createAndAddEditor(entity, dest instanceof Editor ? dest : undefined);
       }
     } else {
       const { from = currentTile, splitDirection } = dest;
       assert(from, 'can not split tile');
       // 新建一个 tile，并打开至此
       destTile = this.splitTile(from.id, splitDirection);
-      editor = destTile.createAndAddEditor(note);
+      editor = destTile.createAndAddEditor(entity);
     }
 
     destTile.switchToEditor(editor);
+
+    if (focus) {
+      editor.focusTarget = focus;
+    }
 
     when(
       () => editor.entity.value.isSuccess,
@@ -291,7 +298,7 @@ export default class Workbench {
           mimeType: record.mimeType,
           entityType: record.entityType,
         },
-        destTile,
+        { dest: destTile },
       );
     }
   }

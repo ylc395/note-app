@@ -1,4 +1,4 @@
-import { action, reaction, when } from 'mobx';
+import { action, reaction, runInAction, when } from 'mobx';
 import PDFViewer, { type Options } from '#web/infra/PDFViewer';
 import type PdfEditor from '#domain/client/app/model/Workbench/noteEditor/PdfEditor';
 import { clone, debounce } from 'lodash-es';
@@ -32,6 +32,18 @@ export default class PDFEditorViewer {
       initialProgress: this.editor.progress,
       onProgressUpdated: this.updateProgress,
     });
+
+    // 消费 editor 上的 focusTarget，跳转到指定页码后清空，实现一次性聚焦
+    reaction(
+      () => this.editor.focusTarget,
+      (focus) => {
+        if (focus) {
+          this.viewer.jumpTo(focus.page);
+          runInAction(() => (this.editor.focusTarget = undefined));
+        }
+      },
+      { signal: this.abortController.signal, fireImmediately: true },
+    );
 
     this.initTextFinder();
   }

@@ -9,6 +9,7 @@ import type { EntityId, EntityPath, Icon } from '#domain/shared/model/entity';
 import { token as documentDbToken } from '#domain/client/shared/infra/documentDb';
 
 import { EventNames, type Events } from './events';
+import type { EditorFocus } from './types';
 import type Tile from '../Tile';
 import Entity from '../../base/Entity';
 
@@ -52,6 +53,8 @@ export default abstract class BaseEditor<T = unknown> {
   }
 
   public readonly id = uniqueId('editor-');
+
+  @observable.ref public accessor focusTarget: EditorFocus | undefined;
 
   public readonly events = new EventBus<Events<T>>(this.id);
 

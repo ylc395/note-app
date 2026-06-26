@@ -37,7 +37,7 @@ export default function Tabs(props: { tile: Tile }) {
 
           if (note) {
             for (const { id: entityId, mimeType } of arrayOf(note)) {
-              workbench.open({ entityId: entityId, mimeType, entityType: EntityTypes.Note }, targetData);
+              workbench.open({ entityId, mimeType, entityType: EntityTypes.Note }, { dest: targetData });
             }
           }
         }
