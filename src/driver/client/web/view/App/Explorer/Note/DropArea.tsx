@@ -5,7 +5,7 @@ import { HandIcon } from 'lucide-solid';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 
 import { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
-import useDnd from '#web/view/components/NoteTree/useDnd';
+import useDnd from '#web/view/App/Explorer/Note/TreeView/Tree/useDnd.js';
 import NoteService from '#domain/client/app/service/NoteService';
 
 import { useContext } from './context';

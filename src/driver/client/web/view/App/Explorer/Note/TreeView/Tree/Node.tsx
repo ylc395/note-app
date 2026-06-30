@@ -10,8 +10,8 @@ import { IS_DEV } from '#domain/shared/infra/env';
 import Workbench from '#domain/client/app/model/Workbench';
 
 import useDnd from './useDnd';
-import Menu, { type MenuItem } from '../Menu';
-import Icon from '../Icon';
+import Menu, { type MenuItem } from '../../../../../components/Menu';
+import Icon from '../../../../../components/Icon';
 
 export interface Props {
   treeExplorer: TreeExplorer;

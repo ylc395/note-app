@@ -3,7 +3,7 @@ import { ShrinkIcon } from 'lucide-solid';
 
 import container from '#utils/singletonContainer';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
-import BaseTreeView from '#web/view/components/NoteTree';
+import Tree from '#web/view/App/Explorer/Note/TreeView/Tree';
 import { EntityTypes } from '#domain/shared/model/entity';
 import Workbench from '#domain/client/app/model/Workbench';
 import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer/Setting';
@@ -57,7 +57,7 @@ export default function TreeView() {
           <SettingButton />
         </div>
       </div>
-      <BaseTreeView
+      <Tree
         className="min-h-0 grow overflow-auto scrollbar-stable text-sm text-fg-secondary"
         onItemTitleClick={handleItemClick}
         treeView={explorer()}
