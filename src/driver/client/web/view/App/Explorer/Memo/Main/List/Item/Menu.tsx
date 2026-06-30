@@ -1,23 +1,25 @@
 import { Menu } from '@ark-ui/solid';
 import assert from 'assert';
-import { Show } from 'solid-js';
+import { createMemo, Show } from 'solid-js';
 import { EllipsisIcon, EditIcon, HistoryIcon, StarIcon, StarOffIcon, CopyIcon } from 'lucide-solid';
 import { action } from 'mobx';
 
-import type MemoView from '#domain/client/app/model/memo/MemoView';
 import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
+import { useContext } from './context';
 
-export default function ItemMenu({ memoView }: { memoView: MemoView }) {
+export default function ItemMenu() {
+  const memo = createMemo(() => useContext()!.memo);
+
   function handleSelect(value: string) {
     switch (value) {
       case 'edit':
-        memoView.startEditing();
+        memo().uiState.isEditing = true;
         return;
       case 'copyId':
-        navigator.clipboard.writeText(getAppUrl(RouteTypes.Memo, memoView.value!.id));
+        navigator.clipboard.writeText(getAppUrl(RouteTypes.Memo, memo().value.id));
         return;
       case 'history':
-        memoView.toggleRevisionList();
+        memo().uiState.revision = true;
         return;
       default:
         assert.fail('invalid select value');
@@ -28,7 +30,7 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
 
   return (
     <Menu.Root onSelect={action((e) => handleSelect(e.value))} positioning={{ flip: false }}>
-      <Menu.Trigger disabled={Boolean(memoView.selfEditor)}>
+      <Menu.Trigger disabled={Boolean(memo().uiState.isEditing)}>
         <EllipsisIcon size={24} />
       </Menu.Trigger>
       <Menu.Positioner>
@@ -39,7 +41,7 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
           </Menu.Item>
           <Menu.Item class={itemClass} value="star">
             <Show
-              when={memoView.value?.isStar}
+              when={memo().value.isStar}
               fallback={
                 <>
                   <StarIcon />

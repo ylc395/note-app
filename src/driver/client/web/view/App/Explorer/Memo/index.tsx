@@ -1,26 +1,28 @@
 import { onCleanup } from 'solid-js';
 
-import container from '#utils/singletonContainer';
 import MemoList from '#domain/client/app/model/memo/List';
 
 import Main from './Main';
 import SearchBox from './SearchBox';
 import Header from '../Header';
 import styles from '../explorer.module.css';
+import { ContextProvider } from './context';
 
 export default function MemoExplorer() {
-  const memoList = container.resolve(MemoList);
-  memoList.setActive(true);
+  const memoList = new MemoList();
+  memoList.activate();
 
   onCleanup(() => {
-    memoList.setActive(false);
+    memoList.deactivate();
   });
 
   return (
-    <div class={styles.explorer}>
-      <Header title="Memo" />
-      <SearchBox />
-      <Main />
-    </div>
+    <ContextProvider memoList={memoList}>
+      <div class={styles.explorer}>
+        <Header title="Memo" />
+        <SearchBox />
+        <Main />
+      </div>
+    </ContextProvider>
   );
 }

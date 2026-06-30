@@ -4,13 +4,12 @@ import { debounce } from 'lodash-es';
 import { Key } from '@solid-primitives/keyed';
 import assert from 'assert';
 
-import MemoList from '#domain/client/app/model/memo/List';
-import container from '#utils/singletonContainer';
 import Item from './Item';
+import { useContext } from '../../context';
 
 export default function MemoListView() {
   let rootRef: HTMLDivElement | undefined;
-  const memoList = container.resolve(MemoList);
+  const { memoList } = useContext()!;
 
   async function tryFetchNextPage() {
     assert(rootRef);

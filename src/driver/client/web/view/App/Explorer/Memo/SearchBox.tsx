@@ -1,15 +1,14 @@
 import { SearchIcon } from 'lucide-solid';
 import { action } from 'mobx';
 
-import container from '#utils/singletonContainer';
-import MemoList from '#domain/client/app/model/memo/List';
+import { useContext } from './context';
 
 export default function SearchBox() {
   let keyword = '';
-  const { filter } = container.resolve(MemoList);
+  const { memoList } = useContext()!;
 
   const search = action(() => {
-    filter!.keyword = keyword;
+    memoList.filter.keyword = keyword;
   });
 
   return (

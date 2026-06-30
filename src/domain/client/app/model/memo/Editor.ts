@@ -1,13 +1,9 @@
 import { action, computed, observable } from 'mobx';
+import { createMutation } from 'mobx-tanstack-query/preset';
 
 export default class Editor {
-  constructor(options: {
-    initialValue?: string;
-    onDestroyed?: () => void;
-    onSubmit?: (value: string) => Promise<'reset' | 'destroy'>;
-  }) {
+  constructor(options: { initialValue?: string; onSubmit: (value: string) => Promise<void> }) {
     this.options = {
-      onDestroyed: options.onDestroyed,
       onSubmit: options.onSubmit,
     };
 
@@ -19,8 +15,7 @@ export default class Editor {
 
   private readonly options: {
     initialValue?: string;
-    onDestroyed?: () => void;
-    onSubmit?: (value: string) => Promise<'reset' | 'destroy'>;
+    onSubmit: (value: string) => Promise<void>;
   };
 
   @observable public accessor value = '';
@@ -35,25 +30,10 @@ export default class Editor {
     return this.value.length > 0;
   }
 
-  public async submit() {
-    const todo = await this.options.onSubmit?.(this.value);
-
-    if (todo === 'destroy') {
-      this.destroy();
-    }
-
-    if (todo === 'reset') {
-      this.reset();
-    }
-  }
+  public readonly submit = createMutation(() => this.options.onSubmit(this.value));
 
   @action
   public reset() {
     this.value = '';
-  }
-
-  @action
-  public destroy() {
-    this.options.onDestroyed?.();
   }
 }

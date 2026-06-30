@@ -4,14 +4,14 @@ import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
 import { action } from 'mobx';
 
-import container from '#utils/singletonContainer';
 import type { Duration } from '#domain/shared/model/memo';
-import MemoList from '#domain/client/app/model/memo/List';
 
 import SortMenu from './SortMenu';
+import { useContext } from '../../context';
 
 export default function ListToolbar() {
-  const memoList = container.resolve(MemoList);
+  const { memoList } = useContext()!;
+
   const {
     filter: { timeSelector },
     childrenQuery,

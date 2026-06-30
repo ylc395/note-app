@@ -1,11 +1,12 @@
 import { Menu } from '@ark-ui/solid';
 import { SortDescIcon } from 'lucide-solid';
 
-import container from '#utils/singletonContainer';
-import MemoList from '#domain/client/app/model/memo/List';
+import { useContext } from '../../context';
 
 export default function SortMenu() {
-  const { filter } = container.resolve(MemoList);
+  const {
+    memoList: { filter },
+  } = useContext()!;
 
   return (
     <Menu.Root>

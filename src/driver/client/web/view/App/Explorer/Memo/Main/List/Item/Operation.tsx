@@ -1,28 +1,26 @@
 import { AtSignIcon, ReplyIcon } from 'lucide-solid';
-import assert from 'assert';
-import { Show } from 'solid-js';
+import { createMemo, Show } from 'solid-js';
+import { Tabs } from '@ark-ui/solid';
 
-import type MemoView from '#domain/client/app/model/memo/MemoView';
+import { useContext } from './context';
 
-export default function Operation({ memoView }: { memoView: MemoView }) {
-  assert(memoView.value, 'no value');
+export default function Operation() {
+  const memo = createMemo(() => useContext()!.memo);
   const buttonClassName = 'flex justify-center items-center text-sm text-fg-tertiary';
 
   return (
-    <div class="flex space-x-4 text-sm xl:mt-4">
-      <Show when={memoView.isParent}>
-        <button class={buttonClassName} onclick={memoView.toggleFollowup.bind(memoView)}>
+    <Tabs.List class="flex space-x-4 text-sm xl:mt-4">
+      <Show when={memo().isParent}>
+        <Tabs.Trigger disabled={memo().value.followupsCount === 0} value="followup" class={buttonClassName}>
           <ReplyIcon class="mr-1" />
           后续
-          <span class="number-suffix">{memoView.value.followupsCount}</span>
-        </button>
+          <span class="number-suffix">{memo().value.followupsCount}</span>
+        </Tabs.Trigger>
       </Show>
-      <Show when={memoView.value.referrersCount > 0}>
-        <button class={buttonClassName} onclick={memoView.toggleReferrers.bind(memoView)}>
-          <AtSignIcon class="mr-1" />
-          被提及 <span class="number-suffix">{memoView.value.referrersCount}</span>
-        </button>
-      </Show>
-    </div>
+      <Tabs.Trigger disabled={memo().value.referrersCount === 0} value="referrers" class={buttonClassName}>
+        <AtSignIcon class="mr-1" />
+        被提及 <span class="number-suffix">{memo().value.referrersCount}</span>
+      </Tabs.Trigger>
+    </Tabs.List>
   );
 }

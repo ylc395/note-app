@@ -7,7 +7,6 @@ import type { MemoVO } from '#domain/shared/model/memo';
 
 import DomainEventBus from '../EventBus';
 import Filter from './Filter';
-import Editor from '../Editor';
 
 export default class MemoList {
   constructor() {
@@ -26,38 +25,28 @@ export default class MemoList {
           this.getNextPageParams({ lastPage, lastPageParam: lastPageParam! }),
         initialPageParam: this.getNextPageParams(),
         options: () => ({
-          enabled: false,
+          enabled: this.isActive,
           queryKey: ['memos', this.filter.params] as const,
         }),
       },
     );
 
-    this.init();
-  }
-
-  private init() {
     autorun(() => {
       this.filter.timeSelector.setActive(this.isActive);
     });
 
     this.eventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed], () =>
-      this.countQuery!.invalidate(),
+      this.countQuery.invalidate(),
     );
   }
 
-  public readonly newEditor = new Editor({
-    onSubmit: async (value) => {
-      const newMemo = await this.remote.memo.create.mutate({ body: value });
-      this.eventBus.emit(DomainEventBus.eventNames.Created, newMemo);
-      this.childrenQuery.refetch();
-
-      return 'reset';
-    },
-  });
+  public readonly createNewMemo = async (value: string) => {
+    const newMemo = await this.remote.memo.create.mutate({ body: value });
+    this.eventBus.emit(DomainEventBus.eventNames.Created, newMemo);
+    this.childrenQuery.refetch();
+  };
 
   @observable private accessor isActive = false;
-
-  @observable public accessor focusedId: MemoVO['id'] | undefined;
 
   public readonly filter = new Filter();
 
@@ -125,12 +114,12 @@ export default class MemoList {
   }
 
   @action
-  public setActive(value: boolean) {
-    this.isActive = value;
+  public activate() {
+    this.isActive = true;
   }
 
   @action
-  public setFocusId(id: MemoVO['id'] | undefined) {
-    this.focusedId = id;
+  public deactivate() {
+    this.isActive = false;
   }
 }

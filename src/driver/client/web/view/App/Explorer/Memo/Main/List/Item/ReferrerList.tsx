@@ -1,23 +1,17 @@
-import { For, Show } from 'solid-js';
-import assert from 'assert';
+import { createMemo, For } from 'solid-js';
+import { Tabs } from '@ark-ui/solid';
 
-import type MemoView from '#domain/client/app/model/memo/MemoView';
-import container from '#utils/singletonContainer';
-import MemoList from '#domain/client/app/model/memo/List';
+import { Tabs as MemoTabs } from '#domain/client/app/model/memo/Memo';
+import { useContext } from './context';
 
-export default function ReferrerList({ memoView }: { memoView: MemoView }) {
-  assert(memoView.referrersQuery, 'no value');
-  const memoList = container.resolve(MemoList);
+export default function ReferrerList() {
+  const memo = createMemo(() => useContext()!.memo);
 
   return (
-    <Show when={memoView.referrersQuery.result.data && memoView.referrersQuery.result.data.length > 0}>
+    <Tabs.Content value={MemoTabs.Referrers}>
       <div>
-        <For each={memoView.referrersQuery.result.data}>
-          {(referrer) => (
-            <div onClick={() => memoList.setFocusId(referrer.sourceEntity.id)}>{referrer.sourceSnippet.text}</div>
-          )}
-        </For>
+        <For each={memo().referrersQuery.result.data}>{(referrer) => <div>{referrer.sourceSnippet.text}</div>}</For>
       </div>
-    </Show>
+    </Tabs.Content>
   );
 }

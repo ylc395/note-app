@@ -3,9 +3,7 @@ import { Index, For, createMemo } from 'solid-js';
 import dayjs from 'dayjs';
 import { action } from 'mobx';
 import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-solid';
-
-import container from '#utils/singletonContainer';
-import MemoList from '#domain/client/app/model/memo/List';
+import { useContext } from '../context';
 
 function getColorClass(count: number) {
   if (count === 0) {
@@ -29,8 +27,10 @@ function getColorClass(count: number) {
 
 export default function Calendar() {
   const {
-    filter: { timeSelector },
-  } = container.resolve(MemoList);
+    memoList: {
+      filter: { timeSelector },
+    },
+  } = useContext()!;
 
   const datePicker = useDatePicker({
     startOfWeek: 1,
