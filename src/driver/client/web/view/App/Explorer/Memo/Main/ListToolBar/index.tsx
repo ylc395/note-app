@@ -1,8 +1,7 @@
-import { CalendarDaysIcon, PanelLeftOpenIcon, RefreshCcwIcon, SearchCheckIcon, XCircleIcon } from 'lucide-solid';
+import { CalendarDaysIcon, PanelLeftOpenIcon, RefreshCcwIcon, XCircleIcon } from 'lucide-solid';
 import { For, Show } from 'solid-js';
 import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
-import { action } from 'mobx';
 
 import type { Duration } from '#domain/shared/model/memo';
 
@@ -42,15 +41,6 @@ export default function ListToolbar() {
                 <Tooltip.Content>不包括 Follow-up</Tooltip.Content>
               </Tooltip.Positioner>
             </Tooltip.Root>
-          </span>
-        </Show>
-        <Show when={memoList.filter.keyword}>
-          <span class="flex items-center">
-            <SearchCheckIcon />
-            关键词：{memoList.filter.keyword}
-            <button class="ml-1" onClick={action(() => (memoList.filter.keyword = undefined))}>
-              <XCircleIcon />
-            </button>
           </span>
         </Show>
         <For each={timeSelector.selectedDurations}>

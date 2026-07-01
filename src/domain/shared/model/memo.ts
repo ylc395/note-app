@@ -75,7 +75,6 @@ export type ClientMemoQuery = {
   parentId?: EntityParentId;
   durations?: Duration[];
   endId?: Memo['id'];
+  isPinned?: boolean;
   startId?: Memo['id'];
-  topics?: string[];
-  keyword?: string;
 };

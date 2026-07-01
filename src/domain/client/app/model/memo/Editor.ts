@@ -31,9 +31,4 @@ export default class Editor {
   }
 
   public readonly submit = createMutation(() => this.options.onSubmit(this.value));
-
-  @action
-  public reset() {
-    this.value = '';
-  }
 }

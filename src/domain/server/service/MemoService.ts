@@ -6,8 +6,6 @@ import { arrayOf } from '#utils/collection.js';
 import { generateId } from '#domain/server/infra/id.js';
 import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '#domain/server/model/memo.js';
 import container from '#utils/singletonContainer.js';
-import { EntityTypes } from '#domain/shared/model/entity.js';
-import { SearchFields } from '#domain/shared/model/search.js';
 import { transactional } from '#domain/server/infra/transaction.js';
 
 import BaseService from './BaseService.js';
@@ -62,8 +60,6 @@ export default class MemoService extends BaseService {
   }
 
   public async queryList(query: ClientMemoQuery) {
-    assert(!(query.keyword && query.limit), 'can not set limit / isPinned with keyword');
-
     let durations;
 
     if (query.durations && query.durations.length > 0) {
@@ -110,24 +106,13 @@ export default class MemoService extends BaseService {
 
     let ids: string[] | undefined;
 
-    if (query.keyword) {
-      const searchResult = await this.searchEngine.search({
-        entityTypes: [EntityTypes.Memo],
-        keyword: query.keyword,
-        fields: [SearchFields.Body],
-        rootId: [],
-      });
-
-      ids = searchResult.map(({ entityId }) => entityId);
-    }
-
     const memos = await this.repo.memos.findAll({
       ...query,
       id: ids,
       isAvailableOnly: true,
       durations,
       parentId: query.parentId || null,
-      limit: query.limit ?? (query.keyword ? undefined : 30),
+      limit: query.limit ?? 30,
       order: query.order ?? 'desc',
     });
 

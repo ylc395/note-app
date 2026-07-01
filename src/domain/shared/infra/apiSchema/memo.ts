@@ -33,7 +33,6 @@ export const clientMemoQuerySchema = z.object({
   parentId: entityParentIdSchema.optional(),
   durations: z.array(durationSchema).optional(),
   endId: memoSchema.shape["id"].optional(),
-  startId: memoSchema.shape["id"].optional(),
-  topics: z.array(z.string()).optional(),
-  keyword: z.string().optional()
+  isPinned: z.boolean().optional(),
+  startId: memoSchema.shape["id"].optional()
 });

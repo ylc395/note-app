@@ -7,7 +7,6 @@ import { EntityTypes } from '#domain/shared/model/entity.js';
 
 import BaseRepository from './BaseRepository.js';
 import schema from '../schema/note.js';
-import { tableName as topicTableName } from '../schema/topic.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 export default class SqliteMemoRepository extends BaseRepository implements MemoRepository {
@@ -86,12 +85,6 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       sql = sql
         .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
         .where(`${recyclableTableName}.entityId`, q.isAvailableOnly ? 'is' : 'is not', null);
-    }
-
-    if (q.topics && q.topics.length > 0) {
-      sql = sql
-        .innerJoin(topicTableName, `${topicTableName}.entityId`, `${this.tableName}.id`)
-        .where(`${topicTableName}.name`, 'in', q.topics);
     }
 
     if (q.durations && q.durations.length > 0) {
