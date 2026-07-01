@@ -8,19 +8,14 @@ import TreeNode, { type NodeOptions } from './TreeNode';
 export default class Tree {
   constructor({
     expanded,
-    initialValues,
     ...options
   }: {
     expanded: TreeNode['id'][];
-    initialValues?: NoteVO[];
     sort?: (value1: NoteVO, value2: NoteVO) => number;
     onStateChanged?: (node: TreeNode, state: number) => void;
   }) {
-    const initialMap = Object.groupBy(initialValues || [], ({ parentId }) => parentId ?? '__ROOT_ID__');
-
     this.nodeOptions = {
       ...options,
-      initialChildren: (node: TreeNode) => initialMap[node.id],
       initialExpanded: (node) => expanded.includes(node.id),
       onCreated: action((node: TreeNode) => {
         this.nodesMap.set(node.id, node);

@@ -35,13 +35,10 @@ export default class TreeExplorer {
 
   public readonly init = once(async () => {
     await when(() => this.uiState.isReady && this.settings.isReady);
-    const expanded = this.uiState.expanded;
-    const notes = await this.remote.note.query.query({ parentId: [null, ...expanded] });
 
     runInAction(() => {
       this.tree = new Tree({
-        expanded,
-        initialValues: notes,
+        expanded: this.uiState.expanded,
         sort: this.sort.bind(this),
         onStateChanged: this.handleNodeStateChanged,
       });
@@ -51,7 +48,39 @@ export default class TreeExplorer {
       () => Array.from(this.tree!.expandedNodeIds),
       (expanded) => (this.uiState.expanded = expanded),
     );
+
+    await this.refreshVisibleTree(this.uiState.expanded);
   });
+
+  private isRefreshing = false;
+
+  public async refreshVisibleTree(expanded?: string[]) {
+    const tree = this.tree;
+
+    if (!tree || this.isRefreshing) {
+      return;
+    }
+
+    this.isRefreshing = true;
+
+    try {
+      const parentIds = [null, ...(expanded ?? Array.from(tree.expandedNodeIds))];
+      const notes = await this.remote.note.query.query({ parentId: parentIds });
+
+      const byParent = new Map<string | null, NoteVO[]>();
+
+      for (const note of notes) {
+        const key = note.parentId ?? null;
+        byParent.set(key, [...(byParent.get(key) ?? []), note]);
+      }
+
+      for (const parentId of parentIds) {
+        tree.get(parentId)?.setChildrenCache(byParent.get(parentId) ?? []);
+      }
+    } finally {
+      this.isRefreshing = false;
+    }
+  }
 
   private readonly remote = container.resolve(rpcToken);
 

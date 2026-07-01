@@ -1,5 +1,6 @@
 import { createEffect, createMemo } from 'solid-js';
 import { ShrinkIcon } from 'lucide-solid';
+import { makeEventListener } from '@solid-primitives/event-listener';
 
 import container from '#utils/singletonContainer';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
@@ -23,6 +24,9 @@ export default function TreeView() {
   createEffect(() => {
     explorer().init();
   });
+
+  // 不用 focusManager，因为它只监听 visibilitychange，覆盖场景有限
+  makeEventListener(window, 'focus', () => explorer().refreshVisibleTree());
 
   function handleItemClick(node: TreeNode) {
     if (!node.value) {

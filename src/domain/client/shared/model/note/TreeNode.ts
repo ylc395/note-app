@@ -11,7 +11,6 @@ export interface NodeOptions {
   value?: NoteVO;
   parent?: TreeNode;
   isFake?: boolean; // 该节点是个占位符，不代表真实 note
-  initialChildren?: NoteVO[] | ((node: TreeNode) => NoteVO[] | undefined);
   initialExpanded?: boolean | ((node: TreeNode) => boolean);
   sort?: (note1: NoteVO, note2: NoteVO) => number;
   onDestroyed?: (node: TreeNode) => void;
@@ -38,12 +37,10 @@ export default class TreeNode {
     this.childrenQuery = createQuery(
       ({ signal }) => this.remote.note.query.query({ parentId: value?.id ?? null }, { signal }),
       {
-        initialData:
-          typeof options.initialChildren === 'function' ? options.initialChildren(this) : options.initialChildren,
-        staleTime: 1000, // 设置一个很短的过期时间，防止即使了提供了 initialData，仍然重新请求的情况
-        refetchOnWindowFocus: true,
+        // 全局 staleTime 为 0，这里覆盖为 Infinity，使得 setChildrenCache 写入的数据不会因 stale 而被 refetchOnMount 重新请求，
+        staleTime: Infinity,
         abortSignal: this.destroyController.signal,
-        queryKey: ['notes', { parentId: value?.id ?? null }],
+        queryKey: ['notes', { parentId: value?.id ?? null }] as const,
         options: () => ({
           enabled: this.isExpanded && !this.options.isFake,
         }),
@@ -89,6 +86,10 @@ export default class TreeNode {
   private readonly childrenQuery;
 
   private readonly destroyController = new AbortController();
+
+  public setChildrenCache(notes: NoteVO[]) {
+    this.childrenQuery.setData(notes);
+  }
 
   @observable.shallow public accessor children: Readonly<TreeNode[]> | undefined; // 对 children 必须采用整体替换的方式，而不能使用 push / splice 等原地更改的方式。因为 <Key> 组件检测不到这样的变动
 
