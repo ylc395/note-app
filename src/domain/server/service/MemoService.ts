@@ -31,6 +31,7 @@ export default class MemoService extends BaseService {
       createdAt: now,
       parentId: memo.parentId || null,
       body: memo.body,
+      isPinned: false,
     });
 
     if (memo.body) {

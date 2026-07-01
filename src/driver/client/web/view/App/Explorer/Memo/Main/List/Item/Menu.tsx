@@ -1,7 +1,7 @@
 import { Menu } from '@ark-ui/solid';
 import assert from 'assert';
 import { createMemo, Show } from 'solid-js';
-import { EllipsisIcon, EditIcon, HistoryIcon, StarIcon, StarOffIcon, CopyIcon } from 'lucide-solid';
+import { EllipsisIcon, EditIcon, HistoryIcon, StarIcon, StarOffIcon, CopyIcon, PinIcon } from 'lucide-solid';
 import { action } from 'mobx';
 
 import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
@@ -21,6 +21,9 @@ export default function ItemMenu() {
       case 'history':
         memo().uiState.revision = true;
         return;
+      case 'pin':
+        memo().togglePin();
+        return;
       default:
         assert.fail('invalid select value');
     }
@@ -35,6 +38,16 @@ export default function ItemMenu() {
       </Menu.Trigger>
       <Menu.Positioner>
         <Menu.Content class="z-10">
+          <Menu.Item class={itemClass} value="pin">
+            <Show when={memo().value.isPinned}>
+              <PinIcon />
+              取消置顶
+            </Show>
+            <Show when={!memo().value.isPinned}>
+              <PinIcon />
+              置顶
+            </Show>
+          </Menu.Item>
           <Menu.Item class={itemClass} value="edit">
             <EditIcon />
             编辑

@@ -10,12 +10,15 @@ import Filter from './Filter';
 
 export default class MemoList {
   constructor() {
-    this.countQuery = createQuery(({ signal }) => this.remote.memo.queryCount.query({ parentId: null }, { signal }), {
-      options: () => ({
-        enabled: this.filter.isEmpty && this.isActive,
-        queryKey: ['memos', 'count'] as const,
-      }),
-    });
+    this.countQuery = createQuery(
+      ({ signal }) => this.remote.memo.queryCount.query({ parentId: null, ...this.filter.params }, { signal }),
+      {
+        options: () => ({
+          enabled: this.isActive,
+          queryKey: ['memos', 'count', this.filter.params] as const,
+        }),
+      },
+    );
 
     this.childrenQuery = createInfiniteQuery(
       ({ signal, pageParam, queryKey: [_, params] }): Promise<MemoVO[]> =>
@@ -60,7 +63,7 @@ export default class MemoList {
 
   @computed
   public get count() {
-    return !this.filter.isEmpty ? this.childrenQuery.result.data?.pages[0]?.length : this.countQuery.result.data;
+    return this.countQuery.result.data;
   }
 
   private getNextPageParams(params?: { lastPage: MemoVO[]; lastPageParam: { limit?: number; isPinned?: boolean } }):
@@ -71,7 +74,7 @@ export default class MemoList {
         startId?: string;
       }
     | undefined {
-    const pageLimit = this.filter.isEmpty ? 20 : undefined;
+    const pageLimit = 20;
 
     // 第一次请求
     if (!params) {
@@ -83,7 +86,7 @@ export default class MemoList {
 
     const { lastPage, lastPageParam } = params;
 
-    if (!pageLimit || !lastPageParam.limit) {
+    if (!lastPageParam.limit) {
       return;
     }
 
@@ -103,6 +106,7 @@ export default class MemoList {
     if (lastOne) {
       const params = {
         limit: pageLimit,
+        isPinned: lastPageParam.isPinned,
       };
 
       if (this.filter?.order === 'asc') {

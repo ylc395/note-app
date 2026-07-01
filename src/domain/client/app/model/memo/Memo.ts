@@ -77,11 +77,20 @@ export default class Memo {
     this.value = value;
   }
 
+  public readonly togglePin = async () => {
+    const isPinned = !this.value.isPinned;
+    await this.remote.memo.updateOne.mutate([this.value.id, { isPinned }]);
+
+    runInAction(() => {
+      this.value.isPinned = isPinned;
+    });
+  };
+
   public readonly update = async (value: string) => {
     await this.remote.memo.updateOne.mutate([this.value.id, { body: value }]);
 
     runInAction(() => {
-      this.value = { ...this.value, body: value };
+      this.value.body = value;
       this.eventBus.emit(DomainEventBus.eventNames.Updated, this.value);
     });
 

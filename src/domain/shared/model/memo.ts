@@ -5,6 +5,7 @@ export interface Memo {
   id: string;
   parentId: EntityParentId;
   body: string;
+  isPinned: boolean;
   updatedAt: number;
   createdAt: number;
 }
@@ -22,14 +23,15 @@ export interface MemoVO extends Memo {
  * @api
  */
 export interface MemoDTO {
-  parentId?: EntityParentId;
-  body: string;
+  parentId?: Memo['parentId'];
+  body: Memo['body'];
+  isPinned?: Memo['isPinned'];
 }
 
 /**
  * @api
  */
-export type MemoPatchDTO = Partial<Pick<MemoDTO, 'body'>>;
+export type MemoPatchDTO = Partial<Pick<MemoDTO, 'body' | 'isPinned'>>;
 
 /**
  * @api

@@ -8,6 +8,7 @@ export const memoSchema = z.object({
   id: z.string(),
   parentId: entityParentIdSchema,
   body: z.string(),
+  isPinned: z.boolean(),
   updatedAt: z.number(),
   createdAt: z.number()
 });
@@ -17,11 +18,13 @@ export const memoVOSchema = memoSchema.merge(z.object({
   referrersCount: z.number()
 }));
 export const memoDTOSchema = z.object({
-  parentId: entityParentIdSchema.optional(),
-  body: z.string()
+  parentId: memoSchema.shape["parentId"].optional(),
+  body: memoSchema.shape["body"],
+  isPinned: memoSchema.shape["isPinned"].optional()
 });
 export const memoPatchDTOSchema = memoDTOSchema.pick({
-  "body": true
+  "body": true,
+  "isPinned": true
 }).partial();
 export const durationSchema = z.object({
   startTime: z.number().optional(),
