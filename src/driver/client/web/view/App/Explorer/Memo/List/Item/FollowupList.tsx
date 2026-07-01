@@ -13,10 +13,10 @@ export default function FollowupList() {
 
   return (
     <Tabs.Content value={MemoTabs.Followup}>
-      <Editor />
+      <Editor appendMemo={memo()} />
       <div>
         <Key each={memo().childrenQuery!.result.data} by="id">
-          {(item) => <Item memo={item()} />}
+          {(item) => <Item memo={item()} parent={memo()} />}
         </Key>
       </div>
     </Tabs.Content>

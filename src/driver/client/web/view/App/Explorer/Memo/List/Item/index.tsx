@@ -15,10 +15,10 @@ import RevisionModal from './RevisionModal';
 import Editor from '../../Editor';
 import { ContextProvider } from './context';
 
-export default function Item(props: { memo: MemoVO; parent?: Memo | MemoList }) {
+export default function Item(props: { memo: MemoVO; parent: Memo | MemoList }) {
   const date = createMemo(() => dayjs(props.memo.createdAt));
+  const memoView = new Memo(props.memo, { parent: props.parent });
   let divRef: HTMLDivElement | undefined;
-  const memoView = new Memo(props.memo);
 
   createEffect(() => {
     memoView.setValue(props.memo);
@@ -29,7 +29,7 @@ export default function Item(props: { memo: MemoVO; parent?: Memo | MemoList }) 
   });
 
   function handleTabChange(e: TabsValueChangeDetails) {
-    memoView.uiState.tab = e.value;
+    memoView.uiState.tab = e.value || undefined;
   }
 
   return (
@@ -42,7 +42,13 @@ export default function Item(props: { memo: MemoVO; parent?: Memo | MemoList }) 
           <Menu />
         </div>
         <Editor memo={memoView} isReadonly={!memoView.uiState.isEditing} />
-        <Tabs.Root lazyMount unmountOnExit onValueChange={action(handleTabChange)} value={memoView.uiState.tab}>
+        <Tabs.Root
+          deselectable
+          lazyMount
+          unmountOnExit
+          onValueChange={action(handleTabChange)}
+          value={memoView.uiState.tab}
+        >
           <Operation />
           <FollowupList />
           <ReferrerList />

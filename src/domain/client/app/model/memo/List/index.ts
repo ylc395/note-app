@@ -38,15 +38,15 @@ export default class MemoList {
       this.filter.timeSelector.setActive(this.isActive);
     });
 
-    this.eventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed], () =>
-      this.countQuery.invalidate(),
-    );
+    this.eventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed], () => {
+      this.countQuery.invalidate();
+    });
   }
 
   public readonly createNewMemo = async (value: string) => {
     const newMemo = await this.remote.memo.create.mutate({ body: value });
     this.eventBus.emit(DomainEventBus.eventNames.Created, newMemo);
-    this.childrenQuery.refetch();
+    this.childrenQuery.invalidate();
   };
 
   @observable private accessor isActive = false;

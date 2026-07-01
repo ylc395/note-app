@@ -2,14 +2,17 @@ import { onCleanup } from 'solid-js';
 
 import MemoList from '#domain/client/app/model/memo/List';
 
-import Main from './Main';
 import SearchBox from './SearchBox';
 import Header from '../Header';
-import styles from '../explorer.module.css';
 import { ContextProvider } from './context';
+import Editor from './Editor';
+import List from './List';
+import ListToolbar from './ListToolBar';
+import styles from '../shared/explorer.module.css';
 
 export default function MemoExplorer() {
   const memoList = new MemoList();
+
   memoList.activate();
 
   onCleanup(() => {
@@ -21,7 +24,11 @@ export default function MemoExplorer() {
       <div class={styles.explorer}>
         <Header title="Memo" />
         <SearchBox />
-        <Main />
+        <Editor appendMemo={memoList} />
+        <div class="relative flex flex-col min-h-0">
+          <ListToolbar />
+          <List />
+        </div>
       </div>
     </ContextProvider>
   );

@@ -5,7 +5,7 @@ import { Key } from '@solid-primitives/keyed';
 import assert from 'assert';
 
 import Item from './Item';
-import { useContext } from '../../context';
+import { useContext } from '../context';
 
 export default function MemoListView() {
   let rootRef: HTMLDivElement | undefined;
@@ -42,7 +42,7 @@ export default function MemoListView() {
   );
 
   return (
-    <div class="mt-4 grow min-h-0 overflow-y-auto scrollbar-stable" onScroll={handleScroll} ref={rootRef}>
+    <div class="mt-4 min-h-0 overflow-y-auto scrollbar-stable" onScroll={handleScroll} ref={rootRef}>
       <div class="space-y-6 mx-auto w-full">
         <Key each={memoList.childrenQuery.result.data?.pages.flat()} by="id">
           {(item) => <Item memo={item()} parent={memoList} />}

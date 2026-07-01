@@ -1,7 +1,7 @@
 import { Menu } from '@ark-ui/solid';
 import { SortDescIcon } from 'lucide-solid';
 
-import { useContext } from '../../context';
+import { useContext } from '../context';
 
 export default function SortMenu() {
   const {

@@ -1,4 +1,4 @@
-import { CalendarDaysIcon, PanelLeftOpenIcon, RefreshCcwIcon, XCircleIcon } from 'lucide-solid';
+import { CalendarDaysIcon, RefreshCcwIcon, XCircleIcon } from 'lucide-solid';
 import { For, Show } from 'solid-js';
 import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
@@ -6,7 +6,7 @@ import { Tooltip } from '@ark-ui/solid';
 import type { Duration } from '#domain/shared/model/memo';
 
 import SortMenu from './SortMenu';
-import { useContext } from '../../context';
+import { useContext } from '../context';
 
 export default function ListToolbar() {
   const { memoList } = useContext()!;
@@ -30,9 +30,6 @@ export default function ListToolbar() {
   return (
     <div class="mt-4 flex justify-between text-fg-tertiary">
       <div class="flex text-sm items-center">
-        <button class="mr-2">
-          <PanelLeftOpenIcon />
-        </button>
         <Show when={typeof memoList.count === 'number'}>
           <span class="flex items-center">
             <Tooltip.Root openDelay={200} positioning={{ placement: 'top' }}>

@@ -11,7 +11,7 @@ import Header from '../Header';
 import SearchResult from './SearchResult';
 import UIState, { NoteTabs } from '../../UIState';
 import SearchBox from './SearchBox';
-import styles from '../explorer.module.css';
+import styles from '../shared/explorer.module.css';
 
 export default function NoteExplorer() {
   const searcher = container.resolve(Searcher);

@@ -1,10 +1,10 @@
 import { createContextProvider, type ContextProviderProps } from '@solid-primitives/context';
-import type MemoList from '#domain/client/app/model/memo/List';
+import type Memo from '#domain/client/app/model/memo/Memo';
 
-export interface Context extends ContextProviderProps {
-  memoList: MemoList;
+interface Context extends ContextProviderProps {
+  memo: Memo;
 }
 
 export const [ContextProvider, useContext] = createContextProvider((props: Context) => ({
-  memoList: props.memoList,
+  memo: props.memo,
 }));

@@ -10,20 +10,18 @@ import { useContext } from './context';
 export default function ItemMenu() {
   const memo = createMemo(() => useContext()!.memo);
 
-  function handleSelect(value: string) {
+  async function handleSelect(value: string) {
     switch (value) {
       case 'edit':
         memo().uiState.isEditing = true;
         return;
       case 'copyId':
-        navigator.clipboard.writeText(getAppUrl(RouteTypes.Memo, memo().value.id));
-        return;
+        return navigator.clipboard.writeText(getAppUrl(RouteTypes.Memo, memo().value.id));
       case 'history':
         memo().uiState.revision = true;
         return;
       case 'pin':
-        memo().togglePin();
-        return;
+        return memo().togglePin();
       default:
         assert.fail('invalid select value');
     }
@@ -39,13 +37,17 @@ export default function ItemMenu() {
       <Menu.Positioner>
         <Menu.Content class="z-10">
           <Menu.Item class={itemClass} value="pin">
-            <Show when={memo().value.isPinned}>
+            <Show
+              when={memo().value.isPinned}
+              fallback={
+                <>
+                  <PinIcon />
+                  置顶
+                </>
+              }
+            >
               <PinIcon />
               取消置顶
-            </Show>
-            <Show when={!memo().value.isPinned}>
-              <PinIcon />
-              置顶
             </Show>
           </Menu.Item>
           <Menu.Item class={itemClass} value="edit">

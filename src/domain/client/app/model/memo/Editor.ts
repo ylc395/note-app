@@ -7,7 +7,6 @@ export default class Editor {
       onSubmit: options.onSubmit,
     };
 
-    this.initialValue = options.initialValue;
     this.update(options.initialValue ?? '');
   }
 

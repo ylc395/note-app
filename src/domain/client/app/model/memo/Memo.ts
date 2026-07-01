@@ -7,6 +7,7 @@ import type { MemoVO } from '#domain/shared/model/memo';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import DomainEventBus from './EventBus';
+import type MemoList from './List';
 
 export enum Tabs {
   Followup = 'followup',
@@ -21,12 +22,14 @@ export default class Memo {
 
   private readonly remote = container.resolve(rpcToken);
 
-  constructor(value: MemoVO, uiState?: Memo['uiState']) {
+  constructor(value: MemoVO, { uiState, parent }: { uiState?: Memo['uiState']; parent: Memo | MemoList }) {
     this.setValue(value);
 
     runInAction(() => {
       this.uiState = uiState || {};
     });
+
+    this.parent = parent;
 
     if (this.isParent) {
       this.childrenQuery = createQuery(
@@ -56,6 +59,8 @@ export default class Memo {
 
   @observable public accessor value!: MemoVO;
 
+  private readonly parent;
+
   @observable public accessor uiState!: {
     tab?: string;
     revision?: boolean;
@@ -84,6 +89,8 @@ export default class Memo {
     runInAction(() => {
       this.value.isPinned = isPinned;
     });
+
+    this.parent.childrenQuery?.invalidate();
   };
 
   public readonly update = async (value: string) => {
@@ -91,13 +98,12 @@ export default class Memo {
 
     runInAction(() => {
       this.value.body = value;
-      this.eventBus.emit(DomainEventBus.eventNames.Updated, this.value);
     });
 
     this.uiState.isEditing = false;
   };
 
-  public async createNewMemo(value: string) {
+  public readonly createNewMemo = async (value: string) => {
     const newMemo = await this.remote.memo.create.mutate({ parentId: this.value.id, body: value });
 
     this.eventBus.emit(DomainEventBus.eventNames.Created, newMemo);
@@ -106,6 +112,12 @@ export default class Memo {
     runInAction(() => {
       this.value.followupsCount += 1;
     });
+  };
+
+  public async remove() {
+    await this.remote.recyclable.batchCreate.mutate([{ entityId: this.value.id }]);
+    this.eventBus.emit(DomainEventBus.eventNames.Removed, this.value);
+    this.parent.childrenQuery?.invalidate();
   }
 
   public destroy() {

@@ -1,30 +1,30 @@
 import { createSignal, Show } from 'solid-js';
 import { SendHorizontalIcon } from 'lucide-solid';
+import assert from 'assert';
 
 import MarkdownEditor from '#web/view/components/MarkdownEditor';
 import MarkdownEditorModel from '#web/view/components/MarkdownEditor/Editor';
 import MemoEditor from '#domain/client/app/model/memo/Editor';
 import type Memo from '#domain/client/app/model/memo/Memo';
+import type MemoList from '#domain/client/app/model/memo/List';
 
-import { useContext } from '../context';
-
-export default function EditorView(props: { memo?: Memo; isReadonly?: boolean }) {
-  const { memoList } = useContext()!;
+export default function EditorView(props: { memo?: Memo; isReadonly?: boolean; appendMemo?: Memo | MemoList }) {
+  const onSubmit = props.appendMemo?.createNewMemo || props.memo?.update;
+  assert(onSubmit);
 
   const memoEditor = new MemoEditor({
-    onSubmit: props.memo ? props.memo.update : memoList.createNewMemo,
     initialValue: props.memo?.value.body,
+    onSubmit,
   });
 
-  const [getCrepe, setCrepe] = createSignal<MarkdownEditorModel>();
+  const [markdownEditor, setMarkdownEditor] = createSignal<MarkdownEditorModel>();
 
   function reset() {
-    const crepe = getCrepe()!;
-    crepe.replaceContent(props.memo?.value.body ?? '');
-    crepe.focus();
+    markdownEditor()?.replaceContent(props.appendMemo ? '' : props.memo?.value.body ?? '');
+    markdownEditor()?.focus();
   }
 
-  async function onSubmit() {
+  async function submit() {
     await memoEditor.submit.mutate();
     reset();
   }
@@ -37,9 +37,9 @@ export default function EditorView(props: { memo?: Memo; isReadonly?: boolean })
     <div class="border rounded-lg">
       <MarkdownEditor
         onUpdate={onUpdate}
-        ref={setCrepe}
+        ref={setMarkdownEditor}
         readonly={props.isReadonly}
-        defaultValue={props.memo?.value.body}
+        defaultValue={memoEditor.value}
       />
       <Show when={!props.isReadonly}>
         <div class="flex justify-between border-t">
@@ -51,7 +51,7 @@ export default function EditorView(props: { memo?: Memo; isReadonly?: boolean })
             <button
               class="rounded-md cursor-pointer bg-bg-active text-fg-accent w-12 h-8 flex items-center justify-center"
               disabled={!memoEditor.canSubmit}
-              onclick={onSubmit}
+              onclick={submit}
             >
               <SendHorizontalIcon />
             </button>
