@@ -1,5 +1,4 @@
-import assert from 'assert';
-import { action, computed, observable } from 'mobx';
+import { computed } from 'mobx';
 import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
 
 import container from '#utils/singletonContainer';
@@ -8,6 +7,15 @@ import type { MemoVO } from '#domain/shared/model/memo';
 
 import DomainEventBus from '../EventBus';
 import Filter from './Filter';
+import assert from 'assert';
+
+interface NextPageParams {
+  isPinned?: boolean;
+  limit?: number;
+  endId?: string;
+  startId?: string;
+  keyword?: string;
+}
 
 export default class MemoList {
   constructor() {
@@ -17,15 +25,18 @@ export default class MemoList {
       }),
     });
 
+    // 带搜索关键词时，直接在第一页中展示所有结果，不再分页
     this.childrenQuery = createInfiniteQuery(
       ({ signal, pageParam, queryKey: [_, params] }): Promise<MemoVO[]> =>
         this.remote.memo.queryList.query({ ...pageParam, ...params }, { signal }),
       {
         getNextPageParam: (lastPage, _, lastPageParam) =>
           this.getNextPageParams({ lastPage, lastPageParam: lastPageParam! }),
-        initialPageParam: this.getNextPageParams(),
+        initialPageParam: this.getNextPageParams(), // 这里不得不重复写一行来绕开非空的类型限制
         options: () => ({
           queryKey: ['memos', this.filter.params] as const,
+          initialPageParam: this.getNextPageParams(),
+          enabled: !this.filter.isRandom,
         }),
       },
     );
@@ -41,9 +52,13 @@ export default class MemoList {
     this.childrenQuery.invalidate();
   };
 
-  @observable public accessor isRandom = false;
+  private readonly canBeRandom = (): boolean => {
+    return typeof this.count === 'number' && this.count > 30;
+  };
 
-  public readonly filter = new Filter();
+  public readonly filter = new Filter({
+    canBeRandom: this.canBeRandom,
+  });
 
   private readonly eventBus = container.resolve(DomainEventBus);
 
@@ -58,41 +73,48 @@ export default class MemoList {
     return this.countQuery.result.data;
   }
 
-  private getNextPageParams(params?: { lastPage: MemoVO[]; lastPageParam: { limit?: number; isPinned?: boolean } }):
-    | {
-        isPinned?: boolean;
-        limit?: number;
-        endId?: string;
-        startId?: string;
+  private getNextPageParams(params?: {
+    lastPage: MemoVO[];
+    lastPageParam: { limit?: number; isPinned?: boolean };
+  }): NextPageParams | undefined {
+    if (this.filter.isSearching()) {
+      // 搜索时，只查一次（一页填满）。这里就直接返回了
+      if (params) {
+        return;
       }
-    | undefined {
-    const pageLimit = 20;
+
+      return {
+        keyword: this.filter.keyword,
+      };
+    }
+
+    const pageLimit = this.filter.params.limit;
 
     // 第一次请求
     if (!params) {
       return {
-        isPinned: this.filter.isEmpty ? true : undefined,
+        isPinned: true,
         limit: pageLimit,
       };
     }
 
     const { lastPage, lastPageParam } = params;
-
-    if (!lastPageParam.limit) {
-      return;
-    }
+    assert(lastPageParam.limit);
 
     if (lastPage.length < lastPageParam.limit) {
-      // pinned + 非 pinned，补足 limit 个
+      // 上一次查 pinned，这一次则查非 pinned，补足 limit 个
       if (lastPageParam.isPinned) {
         return {
           isPinned: false,
           limit: pageLimit - lastPage.length,
         };
       }
+
+      // 上一次查的是非 pinned，则数量不够说明已经请求完了
       return;
     }
 
+    // 上一次查足量了，说明可以继续查
     const lastOne = lastPage.at(-1);
 
     if (lastOne) {
@@ -101,20 +123,11 @@ export default class MemoList {
         isPinned: lastPageParam.isPinned,
       };
 
-      if (this.filter?.order === 'asc') {
+      if (this.filter.order === 'asc') {
         return { ...params, startId: lastOne.id };
       } else {
         return { ...params, endId: lastOne.id };
       }
     }
-  }
-
-  @action
-  public toggleRandom() {
-    this.isRandom = !this.isRandom;
-  }
-
-  public shuffle() {
-    assert(this.isRandom);
   }
 }

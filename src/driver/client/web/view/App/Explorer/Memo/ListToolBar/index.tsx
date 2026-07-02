@@ -1,12 +1,4 @@
-import {
-  ArrowDownWideNarrowIcon,
-  ArrowUpWideNarrowIcon,
-  CalendarDaysIcon,
-  DicesIcon,
-  RefreshCcwIcon,
-  ShuffleIcon,
-  XCircleIcon,
-} from 'lucide-solid';
+import { CalendarDaysIcon, RefreshCcwIcon, ShuffleIcon, XCircleIcon } from 'lucide-solid';
 import { createMemo, For, Show } from 'solid-js';
 import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
@@ -14,6 +6,7 @@ import { Tooltip } from '@ark-ui/solid';
 import type { Duration } from '#domain/shared/model/memo';
 
 import Button from '#web/view/components/Button';
+import SortOption from './SortOption';
 import { useContext } from '../context';
 
 export default function ListToolbar() {
@@ -62,35 +55,20 @@ export default function ListToolbar() {
       </div>
       <div class="flex items-center gap-1">
         <Show
-          when={memoList().isRandom}
+          when={memoList().filter.order === 'random'}
           fallback={
-            <>
-              <Button size="small" onClick={() => memoList().childrenQuery.refetch()}>
-                <RefreshCcwIcon />
-                刷新
-              </Button>
-              <Button size="small" onClick={() => memoList().filter.toggleOrder()}>
-                <Show when={memoList().filter.order === 'desc'}>
-                  <ArrowDownWideNarrowIcon />
-                  降序
-                </Show>
-                <Show when={memoList().filter.order === 'asc'}>
-                  <ArrowUpWideNarrowIcon />
-                  升序
-                </Show>
-              </Button>
-            </>
+            <Button size="small" onClick={() => memoList().childrenQuery.refetch()}>
+              <RefreshCcwIcon />
+              刷新
+            </Button>
           }
         >
-          <Button size="small" onClick={() => memoList().shuffle()}>
-            <DicesIcon />
+          <Button size="small" onClick={() => memoList().filter.shuffle()}>
+            <ShuffleIcon />
             换一批
           </Button>
         </Show>
-        <Button selected={memoList().isRandom} size="small" onClick={() => memoList().toggleRandom()}>
-          <ShuffleIcon />
-          随机
-        </Button>
+        <SortOption />
       </div>
     </div>
   );
