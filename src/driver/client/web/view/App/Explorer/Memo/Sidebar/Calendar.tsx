@@ -11,18 +11,18 @@ function getColorClass(count: number) {
   }
 
   if (count <= 5) {
-    return 'bg-green-100';
+    return 'bg-bg-success text-fg-success';
   }
 
   if (count <= 10) {
-    return 'bg-green-200';
+    return 'bg-emerald-200 text-emerald-800';
   }
 
   if (count <= 20) {
-    return 'bg-green-300';
+    return 'bg-emerald-300 text-emerald-900';
   }
 
-  return 'bg-green-400';
+  return 'bg-emerald-400 text-white';
 }
 
 export default function Calendar() {
@@ -63,22 +63,24 @@ export default function Calendar() {
   return (
     <DatePicker.RootProvider value={datePicker}>
       <DatePicker.View view="day">
-        <DatePicker.ViewControl class="flex items-center justify-between">
-          <DatePicker.PrevTrigger>
-            <ArrowLeftIcon />
+        <DatePicker.ViewControl class="flex items-center justify-between mb-2">
+          <DatePicker.PrevTrigger class="flex items-center justify-center size-7 rounded text-fg-secondary hover:bg-bg-hover transition-colors cursor-pointer">
+            <ArrowLeftIcon class="size-4" />
           </DatePicker.PrevTrigger>
-          {/* <DatePicker.ViewTrigger> */}
-          <DatePicker.RangeText />
-          {/* </DatePicker.ViewTrigger> */}
-          <DatePicker.NextTrigger>
-            <ArrowRightIcon />
+          <DatePicker.RangeText class="text-sm font-medium text-fg-primary" />
+          <DatePicker.NextTrigger class="flex items-center justify-center size-7 rounded text-fg-secondary hover:bg-bg-hover transition-colors cursor-pointer">
+            <ArrowRightIcon class="size-4" />
           </DatePicker.NextTrigger>
         </DatePicker.ViewControl>
-        <DatePicker.Table>
+        <DatePicker.Table class="border-separate border-spacing-1">
           <DatePicker.TableHead>
             <DatePicker.TableRow>
               <Index each={datePicker().weekDays}>
-                {(weekDay) => <DatePicker.TableHeader>{weekDay().short}</DatePicker.TableHeader>}
+                {(weekDay) => (
+                  <DatePicker.TableHeader class="text-xs text-fg-tertiary font-medium w-8 h-8">
+                    {weekDay().short}
+                  </DatePicker.TableHeader>
+                )}
               </Index>
             </DatePicker.TableRow>
           </DatePicker.TableHead>
@@ -94,7 +96,7 @@ export default function Calendar() {
 
                       return (
                         <DatePicker.TableCell
-                          class={`${getColorClass(count())} text-center 
+                          class={`${getColorClass(count())} text-center text-xs rounded-md transition-colors hover:opacity-80 cursor-pointer
                             ${timeSelector.isFuture(date) ? 'text-fg-tertiary' : ''}`}
                           value={day}
                           onClick={(e) =>
@@ -107,7 +109,7 @@ export default function Calendar() {
                           <Tooltip.Root disabled={count() === 0}>
                             <Tooltip.Trigger>{day.day}</Tooltip.Trigger>
                             <Tooltip.Positioner>
-                              <Tooltip.Content>
+                              <Tooltip.Content class="bg-surface-raised text-fg-primary text-xs rounded-md px-2 py-1 shadow-md border border-border-secondary">
                                 {`${day.year}-${day.month + 1}-${day.day}`} {count()}条
                               </Tooltip.Content>
                             </Tooltip.Positioner>

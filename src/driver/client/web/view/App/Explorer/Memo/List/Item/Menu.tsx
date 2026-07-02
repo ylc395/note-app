@@ -5,6 +5,7 @@ import { EllipsisIcon, EditIcon, HistoryIcon, StarIcon, StarOffIcon, CopyIcon, P
 import { action } from 'mobx';
 
 import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
+import Button from '#web/view/components/Button';
 import { useContext } from './context';
 
 export default function ItemMenu() {
@@ -27,15 +28,18 @@ export default function ItemMenu() {
     }
   }
 
-  const itemClass = 'flex items-center cursor-pointer';
+  const itemClass =
+    'flex items-center gap-2 px-3 py-1.5 rounded text-sm text-fg-primary hover:bg-bg-hover cursor-pointer transition-colors';
 
   return (
     <Menu.Root onSelect={action((e) => handleSelect(e.value))} positioning={{ flip: false }}>
-      <Menu.Trigger disabled={Boolean(memo().uiState.isEditing)}>
-        <EllipsisIcon size={24} />
-      </Menu.Trigger>
+      <Menu.Trigger asChild={(childProps) => (
+        <Button {...childProps()} square size="small" disabled={Boolean(memo().uiState.isEditing)}>
+          <EllipsisIcon />
+        </Button>
+      )} />
       <Menu.Positioner>
-        <Menu.Content class="z-10">
+        <Menu.Content class="z-10 min-w-[10rem] bg-surface-raised border border-border-primary rounded-lg shadow-lg p-1">
           <Menu.Item class={itemClass} value="pin">
             <Show
               when={memo().value.isPinned}
@@ -68,7 +72,7 @@ export default function ItemMenu() {
               取消收藏
             </Show>
           </Menu.Item>
-          <Menu.Separator />
+          <Menu.Separator class="h-px bg-border-secondary my-1" />
           <Menu.Item class={itemClass} value="history">
             <HistoryIcon />
             编辑历史

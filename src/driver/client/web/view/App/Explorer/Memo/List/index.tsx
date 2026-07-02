@@ -42,17 +42,21 @@ export default function MemoListView() {
   );
 
   return (
-    <div class="mt-4 min-h-0 overflow-y-auto scrollbar-stable" onScroll={handleScroll} ref={rootRef}>
-      <div class="space-y-6 mx-auto w-full">
+    <div class="mt-4 min-h-0 overflow-y-auto scrollbar-stable pr-1" onScroll={handleScroll} ref={rootRef}>
+      <div class="space-y-4 mx-auto w-full">
         <Key each={memoList.childrenQuery.result.data?.pages.flat()} by="id">
           {(item) => <Item memo={item()} parent={memoList} />}
         </Key>
       </div>
       <Show
         when={!memoList.childrenQuery?.result.hasNextPage}
-        fallback={<LoaderCircleIcon class="animate-spin mx-auto my-6" size={30} />}
+        fallback={
+          <div class="flex justify-center my-6 text-fg-tertiary">
+            <LoaderCircleIcon class="animate-spin" size={24} />
+          </div>
+        }
       >
-        <div class="text-center text-fg-tertiary my-6">没有更多了</div>
+        <div class="text-center text-xs text-fg-tertiary my-6">没有更多了</div>
       </Show>
     </div>
   );

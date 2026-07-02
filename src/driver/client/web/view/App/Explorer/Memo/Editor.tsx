@@ -1,9 +1,11 @@
 import { createSignal, Show } from 'solid-js';
-import { SendHorizontalIcon } from 'lucide-solid';
+import { SendHorizontalIcon, RotateCcwIcon } from 'lucide-solid';
 import assert from 'assert';
+import { action } from 'mobx';
 
 import MarkdownEditor from '#web/view/components/MarkdownEditor';
 import MarkdownEditorModel from '#web/view/components/MarkdownEditor/Editor';
+import Button from '#web/view/components/Button';
 import MemoEditor from '#domain/client/app/model/memo/Editor';
 import type Memo from '#domain/client/app/model/memo/Memo';
 import type MemoList from '#domain/client/app/model/memo/List';
@@ -33,28 +35,46 @@ export default function EditorView(props: { memo?: Memo; isReadonly?: boolean; a
     memoEditor.update(text);
   }
 
+  function cancel() {
+    assert(props.memo);
+    props.memo.uiState.isEditing = false;
+  }
+
   return (
-    <div class="border rounded-lg">
+    <div
+      class="rounded-lg overflow-hidden shrink-0"
+      classList={{
+        'border border-border-primary bg-bg-primary': !props.isReadonly,
+      }}
+    >
       <MarkdownEditor
+        className={props.isReadonly ? '' : 'min-h-[5.5rem] p-3'}
         onUpdate={onUpdate}
         ref={setMarkdownEditor}
         readonly={props.isReadonly}
         defaultValue={memoEditor.value}
       />
       <Show when={!props.isReadonly}>
-        <div class="flex justify-between border-t">
-          <div class="text-sm flex items-center px-2 text-fg-tertiary">字数{memoEditor.value.length}</div>
-          <div class="flex space-x-2">
-            <button onclick={reset} class="text-fg-tertiary">
-              重置
-            </button>
-            <button
-              class="rounded-md cursor-pointer bg-bg-active text-fg-accent w-12 h-8 flex items-center justify-center"
-              disabled={!memoEditor.canSubmit}
-              onclick={submit}
-            >
-              <SendHorizontalIcon />
-            </button>
+        <div class="flex justify-between items-center border-t border-border-secondary px-3 py-2">
+          <div class="text-xs text-fg-tertiary">字数 {memoEditor.value.length}</div>
+          <div class="flex items-center gap-1">
+            <Show when={props.appendMemo}>
+              <Button size="small" onClick={reset}>
+                <RotateCcwIcon />
+                重置
+              </Button>
+              <Button intent="primary" square size="small" disabled={!memoEditor.canSubmit} onClick={submit}>
+                <SendHorizontalIcon />
+              </Button>
+            </Show>
+            <Show when={props.memo}>
+              <Button size="small" onClick={action(cancel)}>
+                取消
+              </Button>
+              <Button size="small" onClick={submit}>
+                保存
+              </Button>
+            </Show>
           </div>
         </div>
       </Show>

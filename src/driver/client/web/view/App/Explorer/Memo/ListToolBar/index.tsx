@@ -5,6 +5,7 @@ import { Tooltip } from '@ark-ui/solid';
 
 import type { Duration } from '#domain/shared/model/memo';
 
+import Button from '#web/view/components/Button';
 import SortMenu from './SortMenu';
 import { useContext } from '../context';
 
@@ -28,35 +29,40 @@ export default function ListToolbar() {
   }
 
   return (
-    <div class="mt-4 flex justify-between text-fg-tertiary">
-      <div class="flex text-sm items-center">
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-fg-secondary">
+      <div class="flex flex-wrap items-center gap-1.5 text-xs">
         <Show when={typeof memoList.count === 'number'}>
-          <span class="flex items-center">
+          <span class="flex items-center text-fg-tertiary">
             <Tooltip.Root openDelay={200} positioning={{ placement: 'top' }}>
               <Tooltip.Trigger>共计 {memoList.count!} 条</Tooltip.Trigger>
               <Tooltip.Positioner>
-                <Tooltip.Content>不包括 Follow-up</Tooltip.Content>
+                <Tooltip.Content class="bg-surface-raised text-fg-primary text-xs rounded-md px-2 py-1 shadow-md border border-border-secondary">
+                  不包括 Follow-up
+                </Tooltip.Content>
               </Tooltip.Positioner>
             </Tooltip.Root>
           </span>
         </Show>
         <For each={timeSelector.selectedDurations}>
           {(duration, i) => (
-            <span class="flex items-center ml-2">
-              <CalendarDaysIcon />
-              日期：<time class="ml-2">{getDurationText(duration)}</time>
-              <button class="ml-1" onclick={() => timeSelector.removeDate(i())}>
-                <XCircleIcon />
+            <span class="inline-flex items-center gap-1 rounded-full bg-bg-tertiary pl-2 pr-1 py-0.5 text-fg-secondary">
+              <CalendarDaysIcon class="size-3.5 text-fg-tertiary" />
+              <time>{getDurationText(duration)}</time>
+              <button
+                class="flex items-center text-fg-tertiary hover:text-fg-danger transition-colors"
+                onclick={() => timeSelector.removeDate(i())}
+              >
+                <XCircleIcon class="size-3.5" />
               </button>
             </span>
           )}
         </For>
       </div>
-      <div class="space-x-2 flex text-sm rounded">
-        <button onclick={() => childrenQuery.refetch()} class="flex items-center">
+      <div class="flex items-center gap-1">
+        <Button size="small" onClick={() => childrenQuery.refetch()}>
           <RefreshCcwIcon />
           刷新
-        </button>
+        </Button>
         <SortMenu />
       </div>
     </div>

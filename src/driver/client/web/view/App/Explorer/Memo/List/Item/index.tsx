@@ -34,11 +34,14 @@ export default function Item(props: { memo: MemoVO; parent: Memo | MemoList }) {
 
   return (
     <ContextProvider memo={memoView}>
-      <div ref={divRef} class="shadow-md rounded-lg border p-4 relative bg-bg-primary">
-        <div class="flex justify-between items-center">
-          <div class="flex text-fg-tertiary">
-            <time datetime={date().toISOString()}>{date().format('YYYY-MM-DD HH:mm:ss')}</time>
-          </div>
+      <div
+        ref={divRef}
+        class="rounded-lg border border-border-primary p-4 relative bg-bg-primary shadow-sm transition-shadow hover:shadow-md"
+      >
+        <div class="flex justify-between items-center mb-2">
+          <time datetime={date().toISOString()} class="text-xs text-fg-tertiary">
+            {date().format('YYYY-MM-DD HH:mm:ss')}
+          </time>
           <Menu />
         </div>
         <Editor memo={memoView} isReadonly={!memoView.uiState.isEditing} />

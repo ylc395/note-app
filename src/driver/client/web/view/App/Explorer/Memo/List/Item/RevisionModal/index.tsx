@@ -24,7 +24,7 @@ export default function RevisionModal() {
     <Modal open={Boolean(memo().uiState.revision)} onClose={action(onClose)} title="历史记录">
       <Show when={revisionList.data.data?.toReversed()}>
         {(revisions) => (
-          <div class="flex h-80 w-[600px] overflow-auto">
+          <div class="flex h-80 w-[640px] border border-border-primary rounded-lg overflow-hidden bg-bg-primary">
             <List
               revisions={revisions()}
               onSelect={(id) => revisionList.setCurrentRevisionId(id)}
