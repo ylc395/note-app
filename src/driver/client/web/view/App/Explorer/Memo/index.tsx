@@ -1,5 +1,3 @@
-import { onCleanup } from 'solid-js';
-
 import MemoList from '#domain/client/app/model/memo/List';
 
 import SearchBox from './SearchBox';
@@ -12,12 +10,6 @@ import styles from '../shared/explorer.module.css';
 
 export default function MemoExplorer() {
   const memoList = new MemoList();
-
-  memoList.activate();
-
-  onCleanup(() => {
-    memoList.deactivate();
-  });
 
   return (
     <ContextProvider memoList={memoList}>

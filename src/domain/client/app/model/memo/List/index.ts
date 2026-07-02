@@ -1,4 +1,5 @@
-import { action, autorun, computed, observable } from 'mobx';
+import assert from 'assert';
+import { action, computed, observable } from 'mobx';
 import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
 
 import container from '#utils/singletonContainer';
@@ -12,7 +13,6 @@ export default class MemoList {
   constructor() {
     this.countQuery = createQuery(({ signal }) => this.remote.memo.queryCount.query(this.filter.params, { signal }), {
       options: () => ({
-        enabled: this.isActive,
         queryKey: ['memos', 'count', this.filter.params] as const,
       }),
     });
@@ -25,15 +25,10 @@ export default class MemoList {
           this.getNextPageParams({ lastPage, lastPageParam: lastPageParam! }),
         initialPageParam: this.getNextPageParams(),
         options: () => ({
-          enabled: this.isActive,
           queryKey: ['memos', this.filter.params] as const,
         }),
       },
     );
-
-    autorun(() => {
-      this.filter.timeSelector.setActive(this.isActive);
-    });
 
     this.eventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed], () => {
       this.countQuery.invalidate();
@@ -46,7 +41,7 @@ export default class MemoList {
     this.childrenQuery.invalidate();
   };
 
-  @observable private accessor isActive = false;
+  @observable public accessor isRandom = false;
 
   public readonly filter = new Filter();
 
@@ -115,12 +110,11 @@ export default class MemoList {
   }
 
   @action
-  public activate() {
-    this.isActive = true;
+  public toggleRandom() {
+    this.isRandom = !this.isRandom;
   }
 
-  @action
-  public deactivate() {
-    this.isActive = false;
+  public shuffle() {
+    assert(this.isRandom);
   }
 }

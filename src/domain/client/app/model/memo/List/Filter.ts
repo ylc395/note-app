@@ -22,7 +22,7 @@ export default class Filter {
   }
 
   @action
-  public setOrder(value: Filter['order']) {
-    this.order = value;
+  public toggleOrder() {
+    this.order = this.order === 'desc' ? 'asc' : 'desc';
   }
 }

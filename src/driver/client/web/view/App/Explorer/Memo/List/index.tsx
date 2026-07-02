@@ -49,8 +49,11 @@ export default function MemoListView() {
             {(item) => <Item memo={item()} parent={memoList} />}
           </Key>
         </div>
-        <Show when={!memoList.childrenQuery?.result.hasNextPage} fallback={<Loading />}>
-          <div class="text-center text-xs text-fg-tertiary my-6">没有更多了</div>
+        <Show
+          when={memoList.childrenQuery?.result.hasNextPage}
+          fallback={<div class="text-center text-xs text-fg-tertiary my-6">没有更多了</div>}
+        >
+          <Loading />
         </Show>
       </Show>
     </div>
