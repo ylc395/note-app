@@ -48,7 +48,7 @@ export default function EditorView(props: { memo?: Memo; isReadonly?: boolean; a
       }}
     >
       <MarkdownEditor
-        className={props.isReadonly ? '' : 'min-h-[5.5rem] p-3'}
+        className={props.isReadonly ? '' : 'min-h-24 p-3'}
         onUpdate={onUpdate}
         ref={setMarkdownEditor}
         readonly={props.isReadonly}

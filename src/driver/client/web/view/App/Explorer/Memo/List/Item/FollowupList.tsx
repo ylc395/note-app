@@ -12,13 +12,11 @@ export default function FollowupList() {
   const memo = createMemo(() => useContext()!.memo);
 
   return (
-    <Tabs.Content value={MemoTabs.Followup}>
-      <div class="mt-3 space-y-4">
-        <Editor appendMemo={memo()} />
-        <Key each={memo().childrenQuery!.result.data} by="id">
-          {(item) => <Item memo={item()} parent={memo()} />}
-        </Key>
-      </div>
+    <Tabs.Content class="mt-3 space-y-4" value={MemoTabs.Followup}>
+      <Editor appendMemo={memo()} />
+      <Key each={memo().childrenQuery!.result.data} by="id">
+        {(item) => <Item memo={item()} parent={memo()} />}
+      </Key>
     </Tabs.Content>
   );
 }
