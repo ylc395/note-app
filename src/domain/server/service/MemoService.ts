@@ -4,7 +4,15 @@ import dayjs from 'dayjs';
 
 import { arrayOf } from '#utils/collection.js';
 import { generateId } from '#domain/server/infra/id.js';
-import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '#domain/server/model/memo.js';
+import type {
+  Memo,
+  MemoDTO,
+  ClientMemoQuery,
+  MemoVO,
+  MemoPatchDTO,
+  Duration,
+  MemoCountQuery,
+} from '#domain/server/model/memo.js';
 import container from '#utils/singletonContainer.js';
 import { transactional } from '#domain/server/infra/transaction.js';
 
@@ -183,7 +191,7 @@ export default class MemoService extends BaseService {
     }
   };
 
-  public async queryCount(query: ClientMemoQuery) {
+  public async queryCount(query: MemoCountQuery) {
     return this.repo.memos.queryCount(query);
   }
 

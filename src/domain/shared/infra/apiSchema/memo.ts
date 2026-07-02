@@ -39,3 +39,6 @@ export const clientMemoQuerySchema = z.object({
   isPinned: z.boolean().optional(),
   startId: memoSchema.shape["id"].optional()
 });
+export const memoCountQuerySchema = clientMemoQuerySchema.pick({
+  "durations": true
+});

@@ -2,6 +2,7 @@ import { tuple } from 'zod';
 
 import {
   clientMemoQuerySchema,
+  memoCountQuerySchema,
   memoPatchDTOSchema,
   memoDTOSchema,
   durationSchema,
@@ -33,7 +34,7 @@ export default router({
     .query(({ input: duration, ctx: { memoService } }) => memoService.queryAvailableDates(duration)),
 
   queryCount: publicProcedure
-    .input(clientMemoQuerySchema)
+    .input(memoCountQuerySchema)
     .query(({ input: countQuery, ctx: { memoService } }) => memoService.queryCount(countQuery)),
 
   queryAvailableDateRange: publicProcedure.query(({ ctx: { memoService } }) => memoService.queryAvailableDateRange()),

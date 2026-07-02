@@ -80,3 +80,8 @@ export type ClientMemoQuery = {
   isPinned?: boolean;
   startId?: Memo['id'];
 };
+
+/**
+ * @api
+ */
+export type MemoCountQuery = Pick<ClientMemoQuery, 'durations'>;

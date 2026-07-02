@@ -1,4 +1,4 @@
-import type { MemoVO, Memo, MemoPatchDTO, ClientMemoQuery } from '#domain/server/model/memo.js';
+import type { MemoVO, Memo, MemoPatchDTO, ClientMemoQuery, MemoCountQuery } from '#domain/server/model/memo.js';
 
 export type MemoPatch = MemoPatchDTO & Partial<Pick<Memo, 'updatedAt'>>;
 
@@ -12,5 +12,5 @@ export interface MemoRepository {
   update: (id: MemoVO['id'], patch: MemoPatch) => Promise<Memo | null>;
   findOneById: (id: MemoVO['id'], config?: { isAvailableOnly?: boolean }) => Promise<Memo | null>;
   findAll: (q: MemoQuery) => Promise<Memo[]>;
-  queryCount: (q?: ClientMemoQuery) => Promise<number>;
+  queryCount: (q?: MemoCountQuery) => Promise<number>;
 }

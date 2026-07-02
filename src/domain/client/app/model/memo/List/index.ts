@@ -10,15 +10,12 @@ import Filter from './Filter';
 
 export default class MemoList {
   constructor() {
-    this.countQuery = createQuery(
-      ({ signal }) => this.remote.memo.queryCount.query({ parentId: null, ...this.filter.params }, { signal }),
-      {
-        options: () => ({
-          enabled: this.isActive,
-          queryKey: ['memos', 'count', this.filter.params] as const,
-        }),
-      },
-    );
+    this.countQuery = createQuery(({ signal }) => this.remote.memo.queryCount.query(this.filter.params, { signal }), {
+      options: () => ({
+        enabled: this.isActive,
+        queryKey: ['memos', 'count', this.filter.params] as const,
+      }),
+    });
 
     this.childrenQuery = createInfiniteQuery(
       ({ signal, pageParam, queryKey: [_, params] }): Promise<MemoVO[]> =>
